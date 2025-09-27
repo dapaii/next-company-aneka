@@ -1,4 +1,3 @@
-// app/api/events/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
@@ -9,48 +8,37 @@ import path from "path";
 
 export const runtime = "nodejs";
 
-// ---------- Schemas ----------
-const EventStatusZ = z.enum(["draft", "published", "archived"]);
+/* =========================
+ * Utils
+ * ========================= */
+function slugify(input: string): string {
+  return (input ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-+/g, "-");
+}
 
-const EventUpdateJsonZ = z.object({
-  title: z.string().min(3).optional(),
-  slug: z.string().min(3).regex(/^[a-z0-9-]+$/).optional(),
-  description: z.string().optional(),
-  location: z.string().optional(),
-  startsAt: z.coerce.date().optional(),
-  endsAt: z.coerce.date().optional(),
-  // NOTE: via PUT JSON boleh replace seluruh array (walau UI tidak memakainya)
-  photos: z.array(z.string().min(1)).optional(),
-  status: EventStatusZ.optional(),
-});
-
-const EventDtoZ = z.object({
-  id: z.string(),
-  title: z.string(),
-  slug: z.string(),
-  description: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
-  startsAt: z.string().datetime(),
-  endsAt: z.string().datetime(),
-  photos: z.array(z.string()),
-  status: EventStatusZ,
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  createdById: z.string().nullable().optional(),
-});
-
-type EventDto = z.infer<typeof EventDtoZ>;
-
-// ---------- Helpers ----------
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
+async function ensureUniqueSlug(base: string, excludeId?: string): Promise<string> {
+  let slug = base;
+  let n = 2;
+  while (true) {
+    const found = await prisma.event.findUnique({ where: { slug } });
+    if (!found || (excludeId && found.id === excludeId)) break;
+    slug = `${base}-${n++}`;
+  }
+  return slug;
+}
 
 function sanitizeFilename(name: string): string {
   const base = path.basename((name || "photo").split("?")[0]);
   return base.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
-function toDto(ev: EventModel): EventDto {
+function toDto(ev: EventModel) {
   return {
     id: ev.id,
     title: ev.title,
@@ -78,7 +66,52 @@ function isSafeEventFilePath(eventId: string, publicRelPath: string): boolean {
   return full.startsWith(base + path.sep) || full === base;
 }
 
-// ---------- GET ----------
+/* =========================
+ * Schemas
+ * ========================= */
+const EventStatusZ = z.enum(["draft", "published", "archived"]);
+
+const EventUpdateJsonZ = z.object({
+  title: z.string().min(3).optional(),
+  slug: z
+    .string()
+    .optional()
+    .transform((val) => slugify(val ?? "")) // normalize dulu
+    .refine((val) => val === "" || /^[a-z0-9-]+$/.test(val), {
+      message: "Slug hanya boleh huruf kecil, angka, dan strip",
+    }),
+  description: z.string().optional(),
+  location: z.string().optional(),
+  startsAt: z.coerce.date().optional(),
+  endsAt: z.coerce.date().optional(),
+  photos: z.array(z.string().min(1)).optional(),
+  status: EventStatusZ.optional(),
+});
+
+const EventDtoZ = z.object({
+  id: z.string(),
+  title: z.string(),
+  slug: z.string(),
+  description: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+  photos: z.array(z.string()),
+  status: EventStatusZ,
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  createdById: z.string().nullable().optional(),
+});
+
+/* =========================
+ * Constants
+ * ========================= */
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
+
+/* =========================
+ * GET
+ * ========================= */
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   const ev = await prisma.event.findUnique({ where: { id: params.id } });
   if (!ev) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -92,8 +125,9 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
   return NextResponse.json({ event: dto });
 }
 
-// ---------- PUT (JSON) ----------
-// Update field text/status. Jika `photos` dikirim, akan replace total array.
+/* =========================
+ * PUT (JSON)
+ * ========================= */
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   await requireAdmin();
 
@@ -105,21 +139,28 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
   const newStartsAt = payload.startsAt ?? current.startsAt;
   const newEndsAt = payload.endsAt ?? current.endsAt;
-  if (newEndsAt < newStartsAt) {
-    return NextResponse.json({ error: "endsAt must be >= startsAt" }, { status: 400 });
+
+  // VALIDASI strict
+  if (newEndsAt <= newStartsAt) {
+    return NextResponse.json({ error: "endsAt must be greater than startsAt" }, { status: 400 });
   }
+
+  const slug =
+    payload.slug && payload.slug.length > 0
+      ? await ensureUniqueSlug(payload.slug, params.id)
+      : current.slug;
 
   const updated = await prisma.event.update({
     where: { id: params.id },
     data: {
       title: payload.title,
-      slug: payload.slug,
+      slug,
       description: payload.description,
       location: payload.location,
-      startsAt: payload.startsAt,
-      endsAt: payload.endsAt,
+      startsAt: newStartsAt,
+      endsAt: newEndsAt,
       status: payload.status,
-      photos: payload.photos, // jika undefined, tidak disentuh
+      photos: payload.photos,
     },
   });
 
@@ -127,8 +168,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json({ event: dto });
 }
 
-// ---------- PATCH (multipart) ----------
-// HANYA untuk "ganti cover" (replace index 0). Tidak mendukung delete/add multiple.
+/* =========================
+ * PATCH (multipart cover replace)
+ * ========================= */
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   await requireAdmin();
 
@@ -141,8 +183,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const form = await req.formData();
-
-  // text fields
   const rawText = {
     title: form.get("title") ?? undefined,
     slug: form.get("slug") ?? undefined,
@@ -152,6 +192,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     endsAt: form.get("endsAt") ?? undefined,
     status: form.get("status") ?? undefined,
   } as const;
+
   const parsed = EventUpdateJsonZ.safeParse(rawText);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
@@ -160,36 +201,43 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const newStartsAt = data.startsAt ?? current.startsAt;
   const newEndsAt = data.endsAt ?? current.endsAt;
-  if (newEndsAt < newStartsAt) {
-    return NextResponse.json({ error: "endsAt must be >= startsAt" }, { status: 400 });
+
+  // VALIDASI strict
+  if (newEndsAt <= newStartsAt) {
+    return NextResponse.json({ error: "endsAt must be greater than startsAt" }, { status: 400 });
   }
 
-  // file (hanya 1, opsional)
+  const slug =
+    data.slug && data.slug.length > 0
+      ? await ensureUniqueSlug(data.slug, params.id)
+      : current.slug;
+
   const first = form.get("photos");
   const file: File | null = first instanceof File ? first : null;
-
-  // optional: old cover (untuk cleanup)
   const oldCoverVal = form.get("oldCover");
   const oldCover: string | null = typeof oldCoverVal === "string" ? oldCoverVal : null;
 
   let nextPhotos: string[] | undefined;
 
-  // Jika ada file → simpan & replace index 0
   if (file) {
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: `File ${file.name} terlalu besar (max 5MB)` }, { status: 400 });
+      return NextResponse.json(
+        { error: `File ${file.name} terlalu besar (max 5MB)` },
+        { status: 400 }
+      );
     }
     const mime = (file.type || "").toLowerCase();
     if (!ALLOWED_MIME.has(mime)) {
-      return NextResponse.json({ error: `Tipe file tidak didukung: ${file.type}` }, { status: 400 });
+      return NextResponse.json(
+        { error: `Tipe file tidak didukung: ${file.type}` },
+        { status: 400 }
+      );
     }
 
     const uploadDir = resolveUploadsDir(params.id);
     await mkdir(uploadDir, { recursive: true });
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
+    const buffer = Buffer.from(await file.arrayBuffer());
     const clean = sanitizeFilename(file.name || "photo");
     const ext =
       clean.includes(".")
@@ -204,22 +252,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const newPath = `/uploads/events/${params.id}/${fileName}`;
 
     const existing = current.photos ?? [];
-    if (existing.length > 0) {
-      // replace index 0
-      nextPhotos = [...existing];
-      nextPhotos[0] = newPath;
-    } else {
-      // belum ada cover → jadikan elemen pertama
-      nextPhotos = [newPath];
-    }
+    nextPhotos = existing.length > 0 ? [...existing] : [];
+    nextPhotos[0] = newPath;
 
-    // optional cleanup: hapus file cover lama kalau valid dan berbeda
     if (oldCover && isSafeEventFilePath(params.id, oldCover) && oldCover !== newPath) {
       const full = path.resolve(process.cwd(), "public", "." + oldCover);
       try {
         await unlink(full);
       } catch {
-        // ignore jika file tidak ada
+        // ignore
       }
     }
   }
@@ -228,13 +269,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     where: { id: params.id },
     data: {
       title: data.title,
-      slug: data.slug,
+      slug,
       description: data.description,
       location: data.location,
-      startsAt: data.startsAt,
-      endsAt: data.endsAt,
+      startsAt: newStartsAt,
+      endsAt: newEndsAt,
       status: data.status,
-      // hanya set photos jika kita memang ganti cover
       ...(nextPhotos ? { photos: nextPhotos } : {}),
     },
   });
@@ -243,11 +283,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ event: dto });
 }
 
-// ---------- DELETE (hapus event) ----------
+/* =========================
+ * DELETE
+ * ========================= */
 export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
   await requireAdmin();
 
-  // optional: bersihkan file-file yang terkait (cover & lainnya)
   try {
     const ev = await prisma.event.findUnique({ where: { id: params.id } });
     if (ev?.photos?.length) {

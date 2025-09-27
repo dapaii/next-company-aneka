@@ -1,7 +1,7 @@
-// components/forms/EventForm.tsx
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,7 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 type EventStatus = "draft" | "published" | "archived";
 
@@ -21,8 +22,24 @@ function isEventStatus(v: string): v is EventStatus {
 }
 
 export default function EventForm() {
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<EventStatus>("draft");
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
+  const [preview, setPreview] = useState<string | null>(null);
+
+  // ✅ realtime validasi tanggal
+  function validateDates(start: string, end: string) {
+    if (start && end) {
+      const s = new Date(start);
+      const e = new Date(end);
+      if (e <= s) {
+        toast.error("⏳ End date harus lebih besar dari start date");
+        return false;
+      }
+    }
+    return true;
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,131 +47,207 @@ export default function EventForm() {
 
     const form = e.currentTarget;
     const fd = new FormData(form);
-    // sinkronkan status dari shadcn Select -> hidden input
     fd.set("status", status);
+
+    // final cek tanggal sebelum kirim
+    if (!validateDates(startsAt, endsAt)) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/events", {
         method: "POST",
-        body: fd, // penting: jangan set Content-Type manual
+        body: fd,
       });
 
       if (!res.ok) {
         const body: unknown = await res.json().catch(() => null);
-
         let message = "Gagal simpan event";
         if (body && typeof body === "object" && "error" in body) {
           const errVal = (body as { error: unknown }).error;
-          message =
-            typeof errVal === "string"
-              ? errVal
-              : (() => {
-                  try {
-                    return JSON.stringify(errVal);
-                  } catch {
-                    return "Gagal simpan event";
-                  }
-                })();
+          message = typeof errVal === "string" ? errVal : JSON.stringify(errVal);
         }
         throw new Error(message);
       }
 
-      window.location.href = "/dashboard/events";
+      toast.success("🎉 Event berhasil disimpan");
+      setTimeout(() => {
+        window.location.href = "/dashboard/events";
+      }, 1000);
     } catch (err) {
-      // err bertipe unknown di TS; aman dikirim ke console & alert sebagai string
-      const msg =
-        err instanceof Error ? err.message : "Gagal simpan event";
-      // eslint-disable-next-line no-console
+      const msg = err instanceof Error ? err.message : "Gagal simpan event";
       console.error(err);
-      alert(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5 max-w-2xl">
-      <div className="grid gap-2">
-        <Label htmlFor="title">Title</Label>
-        <Input id="title" name="title" required disabled={loading} />
-      </div>
+    <form
+      onSubmit={onSubmit}
+      className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto bg-card shadow-sm rounded-xl p-6 border"
+    >
+      {/* Kolom kiri */}
+      <div className="space-y-5">
+        <h2 className="text-xl font-semibold tracking-tight">📅 Tambah Event Baru</h2>
+        <p className="text-sm text-muted-foreground">
+          Lengkapi detail event dengan benar, lalu simpan.
+        </p>
 
-      <div className="grid gap-2">
-        <Label htmlFor="slug">Slug (kebab-case)</Label>
-        <Input
-          id="slug"
-          name="slug"
-          required
-          placeholder="contoh: seminar-ai-bandung"
-          disabled={loading}
-        />
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea id="description" name="description" rows={4} disabled={loading} />
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="location">Location</Label>
-        <Input
-          id="location"
-          name="location"
-          placeholder="Aula Gedung A, Kampus Widyatama"
-          disabled={loading}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="startsAt">Starts At</Label>
-          <Input id="startsAt" name="startsAt" type="datetime-local" required disabled={loading} />
+          <Label htmlFor="title">Title</Label>
+          <Input
+            id="title"
+            name="title"
+            required
+            disabled={loading}
+            placeholder="Masukkan judul event"
+          />
         </div>
+
         <div className="grid gap-2">
-          <Label htmlFor="endsAt">Ends At</Label>
-          <Input id="endsAt" name="endsAt" type="datetime-local" required disabled={loading} />
+          <Label htmlFor="slug">Slug (kebab-case)</Label>
+          <Input
+            id="slug"
+            name="slug"
+            required
+            placeholder="contoh: seminar-ai-bandung"
+            disabled={loading}
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            name="description"
+            rows={3}
+            disabled={loading}
+            placeholder="Tuliskan deskripsi event..."
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="location">Location</Label>
+          <Input
+            id="location"
+            name="location"
+            placeholder="Aula Gedung A, Kampus Widyatama"
+            disabled={loading}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="startsAt">Starts At</Label>
+            <Input
+              id="startsAt"
+              name="startsAt"
+              type="datetime-local"
+              required
+              disabled={loading}
+              value={startsAt}
+              onChange={(e) => {
+                setStartsAt(e.target.value);
+                validateDates(e.target.value, endsAt);
+              }}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="endsAt">Ends At</Label>
+            <Input
+              id="endsAt"
+              name="endsAt"
+              type="datetime-local"
+              required
+              disabled={loading}
+              value={endsAt}
+              onChange={(e) => {
+                setEndsAt(e.target.value);
+                validateDates(startsAt, e.target.value);
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <Label>Status</Label>
+          <Select
+            value={status}
+            onValueChange={(v: string) => {
+              if (isEventStatus(v)) setStatus(v);
+            }}
+            disabled={loading}
+          >
+            <SelectTrigger className="w-full sm:w-60">
+              <SelectValue placeholder="Pilih status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">📝 Draft</SelectItem>
+              <SelectItem value="published">🚀 Published</SelectItem>
+              <SelectItem value="archived">📦 Archived</SelectItem>
+            </SelectContent>
+          </Select>
+          <input type="hidden" name="status" value={status} />
         </div>
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="photos">Photos (PNG/JPG/WEBP) — multiple</Label>
-        <Input
-          id="photos"
-          name="photos"
-          type="file"
-          multiple
-          // samakan dengan whitelist di API biar gak “false hope”
-          accept="image/png,image/jpeg,image/jpg,image/webp"
-          disabled={loading}
-        />
-        <p className="text-xs text-muted-foreground">Maks 5MB per file.</p>
-      </div>
+      {/* Kolom kanan */}
+      <div className="space-y-5 flex flex-col">
+        <div className="grid gap-2">
+          <Label htmlFor="photos">Photos (PNG/JPG/WEBP)</Label>
+          <Input
+            id="photos"
+            name="photos"
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp"
+            disabled={loading}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                setPreview(URL.createObjectURL(file));
+              } else {
+                setPreview(null);
+              }
+            }}
+          />
+          <p className="text-xs text-muted-foreground">
+            Maks 5MB per file. Preview ditampilkan otomatis.
+          </p>
+        </div>
 
-      <div className="grid gap-2">
-        <Label>Status</Label>
-        <Select
-          value={status}
-          onValueChange={(v: string) => {
-            if (isEventStatus(v)) setStatus(v);
-          }}
-          disabled={loading}
-        >
-          <SelectTrigger className="w-full sm:w-60">
-            <SelectValue placeholder="Pilih status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="draft">draft</SelectItem>
-            <SelectItem value="published">published</SelectItem>
-            <SelectItem value="archived">archived</SelectItem>
-          </SelectContent>
-        </Select>
-        {/* Hidden untuk ikut terkirim via FormData (fallback kalau JS di-disable) */}
-        <input type="hidden" name="status" value={status} />
-      </div>
+        {/* Live Preview */}
+        {preview && (
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md border bg-muted">
+            <Image
+              src={preview}
+              alt="Preview cover"
+              fill
+              className="object-cover"
+            />
+          </div>
+        )}
 
-      <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-        {loading ? "Saving..." : "Save"}
-      </Button>
+        {/* Sticky action */}
+        <div className="mt-auto">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full sm:w-auto font-semibold"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Saving...
+              </span>
+            ) : (
+              "Save Event"
+            )}
+          </Button>
+        </div>
+      </div>
     </form>
   );
 }
