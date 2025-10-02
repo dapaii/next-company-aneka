@@ -14,12 +14,6 @@ export type EventGuardItem = {
   cover: string | null; // null kalau gak ada cover valid
 };
 
-/**
- * Pasang di halaman list events:
- * - Validasi tanggal (endsAt > startsAt)
- * - Warning published tanpa cover
- * - Feedback proses delete (via form[data-delete-form="..."])
- */
 export default function EventsGuards({ events }: { events: EventGuardItem[] }) {
   useEffect(() => {
     // === Validasi tanggal & cover publish ===

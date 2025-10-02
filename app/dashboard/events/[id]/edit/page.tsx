@@ -1,107 +1,45 @@
 // app/dashboard/events/[id]/edit/page.tsx
-// ❌ TIDAK ada "use client" di file ini (server component)
-import { headers, cookies } from "next/headers";
-import { z } from "zod";
-import Image from "next/image";
-import UpdateButtons from "@/components/forms/UpdateButtons";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import CoverUpload from "@/components/forms/CoverUpload"; // client component
-import DateValidator from "@/components/forms/DateValidator"; // client component
 
-const EventStatusZ = z.enum(["draft", "published", "archived"]);
-const EventDtoZ = z.object({
-  id: z.string(),
-  title: z.string(),
-  slug: z.string(),
-  description: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
-  startsAt: z.string(),
-  endsAt: z.string(),
-  photos: z.array(z.string()),
-  status: EventStatusZ,
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  createdById: z.string().nullable().optional(),
-});
-type EventDto = z.infer<typeof EventDtoZ>;
+import UpdateButtons from "@/components/forms/UpdateButtons"; // client sudah ada
+import CoverUpload from "@/components/forms/CoverUpload";     // client sudah ada
+import DateValidator from "@/components/forms/DateValidator"; // client sudah ada
 
-async function getBaseUrl(): Promise<string> {
-  const h = await headers();
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  return `${proto}://${host}`;
-}
+import type { EventDto } from "@/lib/events/schemas";
+import { fetchEventById } from "@/services/events";
+import { toSafeImageSrc } from "@/lib/image/safe-src";
+import { toLocalInput } from "@/lib/time/html-input";
 
-async function fetchEvent(id: string): Promise<EventDto> {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || (await getBaseUrl());
-  const cookie = (await cookies()).toString();
-  const url = new URL(`/api/events/${id}`, base).toString();
+/** Next 15: params bisa Promise — helper kecil */
+const resolveParams = <T,>(v: T | Promise<T>) => Promise.resolve(v);
 
-  const res = await fetch(url, { cache: "no-store", headers: { cookie } });
-  if (!res.ok) throw new Error("Failed to fetch event");
-
-  const json: unknown = await res.json();
-  const parsed = z.object({ event: EventDtoZ }).parse(json);
-  return parsed.event;
-}
-
-function toLocalInput(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}`;
-}
-
-function isValidRemoteUrl(s: string): boolean {
-  try {
-    const u = new URL(s);
-    return u.protocol === "http:" || u.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-function isValidLocalPath(s: string): boolean {
-  return s.startsWith("/uploads/");
-}
-function toSafeImageSrc(src?: string | null): string | null {
-  if (!src) return null;
-  const s = src.trim();
-  if (s.length === 0) return null;
-  if (isValidLocalPath(s) || isValidRemoteUrl(s)) return s;
-  return null;
-}
-
-/** ✅ Perbaikan utama: params adalah Promise, jadi harus di-await */
 export default async function EditEventPage({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params; // <- ini yang memperbaiki error
-  const ev = await fetchEvent(id);
+}: { params: { id: string } | Promise<{ id: string }> }) {
+  const { id } = await resolveParams(params);
+  const ev: EventDto = await fetchEventById(id);
 
-  const cover = toSafeImageSrc(ev.photos[0] ?? null);
+  const cover = toSafeImageSrc(ev.photos?.[0] ?? null);
   const extraCount = Math.max(0, (ev.photos?.length ?? 0) - 1);
 
   return (
     <main className="p-6 space-y-6 max-w-5xl mx-auto">
-      <div>
+      <header>
         <h1 className="text-2xl font-bold tracking-tight">✏️ Edit Event</h1>
         <p className="text-sm text-muted-foreground">
           Perbarui detail event. Gambar hanya bisa diganti (replace cover).
         </p>
-      </div>
+      </header>
 
       <form
         id="editForm"
         className="grid grid-cols-1 lg:grid-cols-2 gap-8"
         encType="multipart/form-data"
       >
-        {/* Kolom kiri */}
-        <div className="space-y-5">
+        {/* Kolom kiri: field text */}
+        <section className="space-y-5">
           <div className="grid gap-2">
             <Label htmlFor="title">Title</Label>
             <Input id="title" name="title" defaultValue={ev.title} required />
@@ -114,12 +52,7 @@ export default async function EditEventPage({
 
           <div className="grid gap-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              name="description"
-              rows={3}
-              defaultValue={ev.description ?? ""}
-            />
+            <Textarea id="description" name="description" rows={3} defaultValue={ev.description ?? ""} />
           </div>
 
           <div className="grid gap-2">
@@ -163,27 +96,28 @@ export default async function EditEventPage({
               <option value="archived">📦 Archived</option>
             </select>
           </div>
-        </div>
+        </section>
 
-        {/* Kolom kanan */}
-        <div className="space-y-5">
+        {/* Kolom kanan: cover + aksi */}
+        <section className="space-y-5">
           <CoverUpload defaultCover={cover} />
-          {extraCount > 0 ? (
+
+          {extraCount > 0 && (
             <p className="text-xs text-muted-foreground">
               Ada {extraCount} foto lain tersimpan (tidak dapat ditambah/hapus di sini).
             </p>
-          ) : null}
+          )}
 
-          {cover ? <input type="hidden" name="oldCover" value={cover} /> : null}
+          {cover && <input type="hidden" name="oldCover" value={cover} />}
           <input type="hidden" name="replaceMode" value="cover" />
 
           <div className="pt-10">
             <UpdateButtons id={ev.id} />
           </div>
 
-          {/* Client component: validasi realtime tanggal */}
+          {/* Validasi realtime tanggal (client) */}
           <DateValidator />
-        </div>
+        </section>
       </form>
     </main>
   );

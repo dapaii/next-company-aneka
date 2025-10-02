@@ -1,7 +1,7 @@
 // app/api/events/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth/auth";
 import { z } from "zod";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
