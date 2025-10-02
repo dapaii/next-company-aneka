@@ -1,8 +1,35 @@
-export default function HomePage() {
+import HeroMedia from "@/components/Heromedia";
+import Brands from "@/components/Brands";
+import AboutUs from "@/components/AboutUs";
+import { ResizableDemo } from "@/components/Events";
+import Maps from "@/components/Maps";
+import Footer from "@/components/Footer";
+import Services from "@/components/Services";
+import Blog from "@/components/Blog";
+import CTA from "@/components/CTA";
+import WhatsAppButton from "@/components/WhatsAppButton";
+import { Navbar } from "@/components/Navbar";
+export default function Home() {
   return (
-    <main className="p-6">
-      <h1 className="text-xl font-bold">Company Profile</h1>
-      <p>Welcome. Lihat event terbaru di /dashboard (admin only).</p>
+    <main>
+      <Navbar />
+      <HeroMedia />
+      <div className="w-full h-[1px] bg-white/40"></div>
+      <Brands />
+      <div className="w-full h-[1px] bg-white/40"></div>
+      <AboutUs />
+      <div className="w-full h-[1px] bg-white/40"></div>
+      <Services />
+      <div className="w-full h-[1px] bg-white/40"></div>
+      <ResizableDemo />
+      <div className="w-full h-[1px] bg-white/40"></div>
+      <Blog />
+      <div className="w-full h-[1px] bg-white/40"></div>
+      <CTA />
+      <div className="w-full h-[1px] bg-white/40"></div>
+      <WhatsAppButton />
+      <Maps />
+      <Footer />
     </main>
   );
 }
