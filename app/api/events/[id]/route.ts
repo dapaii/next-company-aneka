@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth/auth";
 import { z } from "zod";
 import type { Event as EventModel } from "@prisma/client";
 import { mkdir, writeFile, unlink } from "fs/promises";

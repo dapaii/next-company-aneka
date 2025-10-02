@@ -1,8 +1,8 @@
 // app/api/auth/login/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { compare } from "@/lib/hash";
-import { signSession } from "@/lib/jwt";
+import { compare } from "@/lib/auth/hash";
+import { signSession } from "@/lib/auth/jwt";
 import { z } from "zod";
 
 const LoginSchema = z.object({
