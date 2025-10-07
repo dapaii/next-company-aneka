@@ -3,7 +3,7 @@
 export default function Maps() {
   return (
     <section className="w-full py-20 bg-[#193764]"
-    style={{
+      style={{
         backgroundImage:
           "url('/bg-wave.png')", // ✅ bikin file SVG motif wave lalu simpan di /public
         backgroundSize: "cover",
@@ -15,7 +15,7 @@ export default function Maps() {
         <div className="text-start mb-8">
           <h2 className="text-3xl font-poppins font-bold text-white">Our Maps Location</h2>
           <p className="text-white font-montserrat mt-2">
-           Visit the PT Aneka Distribusi Indonesia office in person
+            Visit the PT Aneka Distribusi Indonesia office in person
           </p>
         </div>
 
