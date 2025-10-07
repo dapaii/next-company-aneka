@@ -38,6 +38,8 @@ function sanitizeFilename(name: string): string {
   return base.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
+const EventStatusZ = z.enum(["draft", "published", "archived"]);
+
 function toDto(ev: EventModel) {
   return {
     id: ev.id,
@@ -69,14 +71,12 @@ function isSafeEventFilePath(eventId: string, publicRelPath: string): boolean {
 /* =========================
  * Schemas
  * ========================= */
-const EventStatusZ = z.enum(["draft", "published", "archived"]);
-
 const EventUpdateJsonZ = z.object({
   title: z.string().min(3).optional(),
   slug: z
     .string()
     .optional()
-    .transform((val) => slugify(val ?? "")) // normalize dulu
+    .transform((val) => slugify(val ?? ""))
     .refine((val) => val === "" || /^[a-z0-9-]+$/.test(val), {
       message: "Slug hanya boleh huruf kecil, angka, dan strip",
     }),
@@ -112,8 +112,10 @@ const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/jpg", "image/web
 /* =========================
  * GET
  * ========================= */
-export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
-  const ev = await prisma.event.findUnique({ where: { id: params.id } });
+// 🛠️ params sekarang Promise & harus di-await
+export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params; // 🛠️
+  const ev = await prisma.event.findUnique({ where: { id } });
   if (!ev) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const isAdmin = !!(await requireAdmin().catch(() => null));
@@ -128,30 +130,31 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
 /* =========================
  * PUT (JSON)
  * ========================= */
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+// 🛠️ sama: await params
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
 
+  const { id } = await params; // 🛠️
   const bodyUnknown: unknown = await req.json();
   const payload = EventUpdateJsonZ.parse(bodyUnknown);
 
-  const current = await prisma.event.findUnique({ where: { id: params.id } });
+  const current = await prisma.event.findUnique({ where: { id } });
   if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const newStartsAt = payload.startsAt ?? current.startsAt;
   const newEndsAt = payload.endsAt ?? current.endsAt;
 
-  // VALIDASI strict
   if (newEndsAt <= newStartsAt) {
     return NextResponse.json({ error: "endsAt must be greater than startsAt" }, { status: 400 });
   }
 
   const slug =
     payload.slug && payload.slug.length > 0
-      ? await ensureUniqueSlug(payload.slug, params.id)
+      ? await ensureUniqueSlug(payload.slug, id)
       : current.slug;
 
   const updated = await prisma.event.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       title: payload.title,
       slug,
@@ -171,7 +174,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 /* =========================
  * PATCH (multipart cover replace)
  * ========================= */
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
 
   const ct = req.headers.get("content-type") ?? "";
@@ -179,7 +182,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "Content-Type must be multipart/form-data" }, { status: 415 });
   }
 
-  const current = await prisma.event.findUnique({ where: { id: params.id } });
+  const { id } = await params; // 🛠️
+  const current = await prisma.event.findUnique({ where: { id } });
   if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const form = await req.formData();
@@ -202,14 +206,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const newStartsAt = data.startsAt ?? current.startsAt;
   const newEndsAt = data.endsAt ?? current.endsAt;
 
-  // VALIDASI strict
   if (newEndsAt <= newStartsAt) {
     return NextResponse.json({ error: "endsAt must be greater than startsAt" }, { status: 400 });
   }
 
   const slug =
     data.slug && data.slug.length > 0
-      ? await ensureUniqueSlug(data.slug, params.id)
+      ? await ensureUniqueSlug(data.slug, id)
       : current.slug;
 
   const first = form.get("photos");
@@ -234,7 +237,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       );
     }
 
-    const uploadDir = resolveUploadsDir(params.id);
+    const uploadDir = resolveUploadsDir(id); // 🛠️
     await mkdir(uploadDir, { recursive: true });
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -249,13 +252,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         : ".webp";
     const fileName = `${Date.now()}-${clean}${ext}`;
     await writeFile(path.join(uploadDir, fileName), buffer);
-    const newPath = `/uploads/events/${params.id}/${fileName}`;
+    const newPath = `/uploads/events/${id}/${fileName}`; // 🛠️
 
     const existing = current.photos ?? [];
     nextPhotos = existing.length > 0 ? [...existing] : [];
     nextPhotos[0] = newPath;
 
-    if (oldCover && isSafeEventFilePath(params.id, oldCover) && oldCover !== newPath) {
+    if (oldCover && isSafeEventFilePath(id, oldCover) && oldCover !== newPath) {
       const full = path.resolve(process.cwd(), "public", "." + oldCover);
       try {
         await unlink(full);
@@ -266,7 +269,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const updated = await prisma.event.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       title: data.title,
       slug,
@@ -286,14 +289,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 /* =========================
  * DELETE
  * ========================= */
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
 
+  const { id } = await params; // 🛠️
+
   try {
-    const ev = await prisma.event.findUnique({ where: { id: params.id } });
+    const ev = await prisma.event.findUnique({ where: { id } });
     if (ev?.photos?.length) {
       for (const p of ev.photos) {
-        if (!isSafeEventFilePath(params.id, p)) continue;
+        if (!isSafeEventFilePath(id, p)) continue;
         const full = path.resolve(process.cwd(), "public", "." + p);
         try {
           await unlink(full);
@@ -306,6 +311,6 @@ export async function DELETE(_: NextRequest, { params }: { params: { id: string 
     // ignore
   }
 
-  await prisma.event.delete({ where: { id: params.id } });
+  await prisma.event.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }
