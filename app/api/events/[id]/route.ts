@@ -3,8 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/auth";
 import { z } from "zod";
 import type { Event as EventModel } from "@prisma/client";
-import { mkdir, writeFile, unlink } from "fs/promises";
-import path from "path";
+import { supabase } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 
@@ -33,11 +32,6 @@ async function ensureUniqueSlug(base: string, excludeId?: string): Promise<strin
   return slug;
 }
 
-function sanitizeFilename(name: string): string {
-  const base = path.basename((name || "photo").split("?")[0]);
-  return base.replace(/[^a-zA-Z0-9._-]/g, "_");
-}
-
 const EventStatusZ = z.enum(["draft", "published", "archived"]);
 
 function toDto(ev: EventModel) {
@@ -55,17 +49,6 @@ function toDto(ev: EventModel) {
     updatedAt: ev.updatedAt.toISOString(),
     createdById: ev.createdById ?? null,
   };
-}
-
-function resolveUploadsDir(eventId: string): string {
-  return path.join(process.cwd(), "public", "uploads", "events", eventId);
-}
-
-function isSafeEventFilePath(eventId: string, publicRelPath: string): boolean {
-  if (!publicRelPath.startsWith(`/uploads/events/${eventId}/`)) return false;
-  const full = path.resolve(process.cwd(), "public", "." + publicRelPath);
-  const base = path.resolve(resolveUploadsDir(eventId));
-  return full.startsWith(base + path.sep) || full === base;
 }
 
 /* =========================
@@ -108,13 +91,13 @@ const EventDtoZ = z.object({
  * ========================= */
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_MIME = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
+const BUCKET = process.env.SUPABASE_BUCKET_NAME!;
 
 /* =========================
  * GET
  * ========================= */
-// 🛠️ params sekarang Promise & harus di-await
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params; // 🛠️
+  const { id } = await params;
   const ev = await prisma.event.findUnique({ where: { id } });
   if (!ev) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -128,13 +111,16 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 }
 
 /* =========================
- * PUT (JSON)
+ * PUT (JSON update)
  * ========================= */
-// 🛠️ sama: await params
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
+  try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-  const { id } = await params; // 🛠️
+  const { id } = await params;
   const bodyUnknown: unknown = await req.json();
   const payload = EventUpdateJsonZ.parse(bodyUnknown);
 
@@ -143,7 +129,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const newStartsAt = payload.startsAt ?? current.startsAt;
   const newEndsAt = payload.endsAt ?? current.endsAt;
-
   if (newEndsAt <= newStartsAt) {
     return NextResponse.json({ error: "endsAt must be greater than startsAt" }, { status: 400 });
   }
@@ -172,143 +157,109 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 /* =========================
- * PATCH (multipart cover replace)
+ * PATCH (upload & replace cover)
  * ========================= */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
+  try {
+    await requireAdmin();
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
+  const { id } = await params;
   const ct = req.headers.get("content-type") ?? "";
+
   if (!ct.includes("multipart/form-data")) {
     return NextResponse.json({ error: "Content-Type must be multipart/form-data" }, { status: 415 });
   }
 
-  const { id } = await params; // 🛠️
   const current = await prisma.event.findUnique({ where: { id } });
   if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const form = await req.formData();
-  const rawText = {
-    title: form.get("title") ?? undefined,
-    slug: form.get("slug") ?? undefined,
-    description: form.get("description") ?? undefined,
-    location: form.get("location") ?? undefined,
-    startsAt: form.get("startsAt") ?? undefined,
-    endsAt: form.get("endsAt") ?? undefined,
-    status: form.get("status") ?? undefined,
-  } as const;
+  const file = form.get("photos");
+  const photo = file instanceof File ? file : null;
 
-  const parsed = EventUpdateJsonZ.safeParse(rawText);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
-  const data = parsed.data;
-
-  const newStartsAt = data.startsAt ?? current.startsAt;
-  const newEndsAt = data.endsAt ?? current.endsAt;
-
-  if (newEndsAt <= newStartsAt) {
-    return NextResponse.json({ error: "endsAt must be greater than startsAt" }, { status: 400 });
+  if (!photo) {
+    return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
   }
 
-  const slug =
-    data.slug && data.slug.length > 0
-      ? await ensureUniqueSlug(data.slug, id)
-      : current.slug;
+  if (photo.size > MAX_FILE_SIZE)
+    return NextResponse.json({ error: `File terlalu besar (max 5MB)` }, { status: 400 });
 
-  const first = form.get("photos");
-  const file: File | null = first instanceof File ? first : null;
-  const oldCoverVal = form.get("oldCover");
-  const oldCover: string | null = typeof oldCoverVal === "string" ? oldCoverVal : null;
+  const mime = (photo.type || "").toLowerCase();
+  if (!ALLOWED_MIME.has(mime))
+    return NextResponse.json({ error: `Tipe file tidak didukung: ${photo.type}` }, { status: 400 });
 
-  let nextPhotos: string[] | undefined;
+  const ext = photo.name.split(".").pop() ?? "jpg";
+  const fileName = `${Date.now()}-${id}.${ext}`;
+  const arrayBuffer = await photo.arrayBuffer();
+  const buffer = new Uint8Array(arrayBuffer);
 
-  if (file) {
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: `File ${file.name} terlalu besar (max 5MB)` },
-        { status: 400 }
-      );
-    }
-    const mime = (file.type || "").toLowerCase();
-    if (!ALLOWED_MIME.has(mime)) {
-      return NextResponse.json(
-        { error: `Tipe file tidak didukung: ${file.type}` },
-        { status: 400 }
-      );
-    }
+  // Upload ke Supabase
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .upload(`events/${id}/${fileName}`, buffer, { contentType: photo.type, upsert: true });
 
-    const uploadDir = resolveUploadsDir(id); // 🛠️
-    await mkdir(uploadDir, { recursive: true });
+  if (error || !data?.path) {
+    console.error("Upload gagal:", error);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const clean = sanitizeFilename(file.name || "photo");
-    const ext =
-      clean.includes(".")
-        ? ""
-        : mime === "image/png"
-        ? ".png"
-        : mime.includes("jpeg")
-        ? ".jpg"
-        : ".webp";
-    const fileName = `${Date.now()}-${clean}${ext}`;
-    await writeFile(path.join(uploadDir, fileName), buffer);
-    const newPath = `/uploads/events/${id}/${fileName}`; // 🛠️
+  // Dapatkan URL publik
+  const { data: publicData } = supabase.storage.from(BUCKET).getPublicUrl(data.path);
+  const newUrl = publicData?.publicUrl ?? null;
+  if (!newUrl) {
+    return NextResponse.json({ error: "Failed to get public URL" }, { status: 500 });
+  }
 
-    const existing = current.photos ?? [];
-    nextPhotos = existing.length > 0 ? [...existing] : [];
-    nextPhotos[0] = newPath;
-
-    if (oldCover && isSafeEventFilePath(id, oldCover) && oldCover !== newPath) {
-      const full = path.resolve(process.cwd(), "public", "." + oldCover);
-      try {
-        await unlink(full);
-      } catch {
-        // ignore
+  // Hapus foto lama
+  if (current.photos?.length) {
+    try {
+      for (const url of current.photos) {
+        const u = new URL(url);
+        const relPath = u.pathname.split(`/storage/v1/object/public/${BUCKET}/`)[1];
+        if (relPath) await supabase.storage.from(BUCKET).remove([relPath]);
       }
+    } catch (err) {
+      console.warn("Gagal hapus file lama:", err);
     }
   }
 
   const updated = await prisma.event.update({
     where: { id },
-    data: {
-      title: data.title,
-      slug,
-      description: data.description,
-      location: data.location,
-      startsAt: newStartsAt,
-      endsAt: newEndsAt,
-      status: data.status,
-      ...(nextPhotos ? { photos: nextPhotos } : {}),
-    },
+    data: { photos: [newUrl] },
   });
 
-  const dto = EventDtoZ.parse(toDto(updated));
-  return NextResponse.json({ event: dto });
+  return NextResponse.json({ event: toDto(updated) });
 }
 
 /* =========================
  * DELETE
  * ========================= */
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  await requireAdmin();
-
-  const { id } = await params; // 🛠️
-
   try {
-    const ev = await prisma.event.findUnique({ where: { id } });
-    if (ev?.photos?.length) {
-      for (const p of ev.photos) {
-        if (!isSafeEventFilePath(id, p)) continue;
-        const full = path.resolve(process.cwd(), "public", "." + p);
-        try {
-          await unlink(full);
-        } catch {
-          // ignore
-        }
-      }
-    }
+    await requireAdmin();
   } catch {
-    // ignore
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const ev = await prisma.event.findUnique({ where: { id } });
+  if (!ev) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  if (ev.photos?.length) {
+    try {
+      const paths: string[] = [];
+      for (const url of ev.photos) {
+        const u = new URL(url);
+        const relPath = u.pathname.split(`/storage/v1/object/public/${BUCKET}/`)[1];
+        if (relPath) paths.push(relPath);
+      }
+      if (paths.length) await supabase.storage.from(BUCKET).remove(paths);
+    } catch (err) {
+      console.warn("Gagal hapus foto dari Supabase:", err);
+    }
   }
 
   await prisma.event.delete({ where: { id } });

@@ -42,47 +42,44 @@ export default function EventForm() {
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    const form = e.currentTarget;
-    const fd = new FormData(form);
-    fd.set("status", status);
+  const form = e.currentTarget;
+  const fd = new FormData(form);
+  fd.set("status", status);
 
-    // final cek tanggal sebelum kirim
-    if (!validateDates(startsAt, endsAt)) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/events", {
-        method: "POST",
-        body: fd,
-      });
-
-      if (!res.ok) {
-        const body: unknown = await res.json().catch(() => null);
-        let message = "Gagal simpan event";
-        if (body && typeof body === "object" && "error" in body) {
-          const errVal = (body as { error: unknown }).error;
-          message = typeof errVal === "string" ? errVal : JSON.stringify(errVal);
-        }
-        throw new Error(message);
-      }
-
-      toast.success("🎉 Event berhasil disimpan");
-      setTimeout(() => {
-        window.location.href = "/dashboard/events";
-      }, 1000);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Gagal simpan event";
-      console.error(err);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
+  if (!validateDates(startsAt, endsAt)) {
+    setLoading(false);
+    return;
   }
+
+  try {
+    const res = await fetch("/api/events", {
+      method: "POST",
+      body: fd,
+      credentials: "include", // ✅ kirim cookie ke server
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const message =
+        typeof data.error === "string"
+          ? data.error
+          : JSON.stringify(data.error ?? "Gagal simpan event");
+      throw new Error(message);
+    }
+
+    toast.success("🎉 Event berhasil disimpan");
+    setTimeout(() => (window.location.href = "/dashboard/events"), 800);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Gagal simpan event:", msg);
+    toast.error(msg);
+  } finally {
+    setLoading(false);
+  }
+}
 
   return (
     <form
