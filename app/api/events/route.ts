@@ -1,9 +1,8 @@
-// app/api/events/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/auth";
+import { supabase } from "@/lib/supabase";
 import { z } from "zod";
-import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 
 export const runtime = "nodejs";
@@ -31,11 +30,6 @@ async function ensureUniqueSlug(base: string): Promise<string> {
   return slug;
 }
 
-function sanitizeFilename(name: string): string {
-  const base = path.basename(name.split("?")[0]);
-  return base.replace(/[^a-zA-Z0-9._-]/g, "_");
-}
-
 function isFile(v: FormDataEntryValue): v is File {
   return v instanceof File;
 }
@@ -50,7 +44,7 @@ const EventBase = z.object({
   slug: z
     .string()
     .optional()
-    .transform((val) => slugify(val ?? "")) // normalize dulu
+    .transform((val) => slugify(val ?? ""))
     .refine((val) => /^[a-z0-9-]+$/.test(val), {
       message: "Slug hanya boleh huruf kecil, angka, dan strip",
     }),
@@ -75,6 +69,7 @@ const ALLOWED_MIME: ReadonlySet<string> = new Set([
   "image/jpg",
   "image/webp",
 ]);
+const BUCKET = process.env.SUPABASE_BUCKET_NAME!;
 
 /* =========================
  * GET: list events
@@ -93,12 +88,18 @@ export async function GET(_req: NextRequest) {
  * POST: create (JSON or multipart)
  * ========================= */
 export async function POST(req: NextRequest) {
-  const sess = (await requireAdmin()) as { sub: string };
+  let sess;
+  try {
+    sess = await requireAdmin();
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const ct = req.headers.get("content-type") ?? "";
 
   // ---------- JSON mode ----------
   if (ct.includes("application/json")) {
-    const body = (await req.json()) as unknown;
+    const body = await req.json();
     const parsed = EventCreateJson.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
@@ -156,61 +157,59 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1) Buat event dulu (tanpa photos)
+    // 1️⃣ Buat event tanpa foto dulu
     const created = await prisma.event.create({
       data: { ...parsed.data, slug, createdById: sess.sub, photos: [] },
     });
 
-    // 2) Simpan file
+    // 2️⃣ Upload file ke Supabase Storage
     const entries = form.getAll("photos");
     const files = entries.filter(isFile);
+    const savedUrls: string[] = [];
 
-    const savedPaths: string[] = [];
-    if (files.length > 0) {
-      const uploadDir = path.join(
-        process.cwd(),
-        "public",
-        "uploads",
-        "events",
-        created.id
-      );
-      await mkdir(uploadDir, { recursive: true });
+    for (const f of files) {
+      if (f.size === 0) continue;
+      if (f.size > MAX_FILE_SIZE)
+        return NextResponse.json(
+          { error: `File ${f.name} terlalu besar (max 5MB)` },
+          { status: 400 }
+        );
 
-      for (const f of files) {
-        if (f.size === 0) continue;
-        if (f.size > MAX_FILE_SIZE) {
-          return NextResponse.json(
-            { error: `File ${f.name} terlalu besar (max 5MB)` },
-            { status: 400 }
-          );
-        }
-        const mime = (f.type || "").toLowerCase();
-        if (!ALLOWED_MIME.has(mime)) {
-          return NextResponse.json(
-            { error: `Tipe file tidak didukung: ${f.type}` },
-            { status: 400 }
-          );
-        }
+      const mime = (f.type || "").toLowerCase();
+      if (!ALLOWED_MIME.has(mime))
+        return NextResponse.json(
+          { error: `Tipe file tidak didukung: ${f.type}` },
+          { status: 400 }
+        );
 
-        const buffer = Buffer.from(await f.arrayBuffer());
-        const clean = sanitizeFilename(f.name || "photo");
-        const ext = clean.includes(".")
-          ? ""
-          : mime === "image/png"
-          ? ".png"
-          : mime.includes("jpeg")
-          ? ".jpg"
-          : ".webp";
-        const fileName = `${Date.now()}-${clean}${ext}`;
+      const ext = path.extname(f.name) || ".jpg";
+      const fileName = `${Date.now()}-${slug}${ext}`;
+      const arrayBuffer = await f.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
 
-        await writeFile(path.join(uploadDir, fileName), buffer);
-        savedPaths.push(`/uploads/events/${created.id}/${fileName}`);
+      // Upload ke Supabase Storage
+      const { data, error } = await supabase.storage
+        .from(BUCKET)
+        .upload(`events/${created.id}/${fileName}`, buffer, {
+          contentType: f.type,
+          upsert: true,
+        });
+
+      if (error || !data?.path) {
+        console.error("Upload gagal:", error);
+        continue;
       }
+
+      // Dapatkan URL publik
+      const { data: publicUrlData } = supabase.storage.from(BUCKET).getPublicUrl(data.path);
+      const url = publicUrlData?.publicUrl ?? null;
+      if (url) savedUrls.push(url);
     }
 
+    // 3️⃣ Update event dengan URL foto
     const updated = await prisma.event.update({
       where: { id: created.id },
-      data: { photos: savedPaths },
+      data: { photos: savedUrls },
     });
 
     return NextResponse.json({ event: updated }, { status: 201 });

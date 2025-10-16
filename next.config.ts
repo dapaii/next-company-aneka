@@ -12,8 +12,11 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
         pathname: "/**",
       },
-      // kalau kamu juga pakai varian ini, aktifkan:
-      // { protocol: "https", hostname: "plus.unsplash.com", pathname: "/**" },
+      {
+        protocol: "https",
+        hostname: "ikzaejvbytwrrpavuihl.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
   },
 };
