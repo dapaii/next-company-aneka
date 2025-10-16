@@ -34,12 +34,6 @@ export const metadata: Metadata = {
   publisher: "Aneka Distribusi",
   keywords: ["distribusi", "manajemen produk", "supply chain", "inventory", "penjualan", "gudang"],
 
-  // ⬇️ penting untuk GSC
-  verification: {
-    google: "bC119DHnI3FVUMCjilwvphzYjAeqXk5Gbmjf1VJf64I",
-    
-  },
-
   alternates: {
     canonical: "/",
   },
