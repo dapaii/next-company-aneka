@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 const SITE_NAME = "Aneka Distribusi";
 const SITE_DESC = "Sistem manajemen dan distribusi produk yang cepat, efisien, dan modern.";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://anekadistribusi.vercel.app";
-const DEFAULT_OG = "/og-default.jpg"; // taruh file di /public
+const DEFAULT_OG = "/og-default.jpg"; 
 
 // ✅ SEO GLOBAL
 export const metadata: Metadata = {
@@ -33,6 +33,13 @@ export const metadata: Metadata = {
   creator: "Aneka Distribusi",
   publisher: "Aneka Distribusi",
   keywords: ["distribusi", "manajemen produk", "supply chain", "inventory", "penjualan", "gudang"],
+
+  // ⬇️ penting untuk GSC
+  verification: {
+    google: "bC119DHnI3FVUMCjilwvphzYjAeqXk5Gbmjf1VJf64I",
+    
+  },
+
   alternates: {
     canonical: "/",
   },
