@@ -7,13 +7,6 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator,} from "@/components/ui/command";
-
-/**
- * Perubahan penting anti-hydration:
- * - Tombol Search pakai <button> biasa (bukan shadcn <Button>), jadi markup SSR/CSR identik.
- * - Hindari class merge runtime yang bikin perbedaan di server vs client.
- * - Shortcut ⌘/Ctrl+K tetap jalan.
- */
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [openSearch, setOpenSearch] = useState(false);
