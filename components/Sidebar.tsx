@@ -4,25 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { Calendar, Home, PlusCircle, Shield, Settings } from "lucide-react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter } from "@/components/ui/sidebar";
 import { useEffect, useMemo, useState } from "react";
 import LogoutButton from "./forms/LogoutButton";
 import { cn } from "@/lib/utils";
 
-/* ---------------- Types ---------------- */
 export type NavItem = { title: string; url: string; icon: LucideIcon };
 
-/* ---------------- Nav Items (diexport) ---------------- */
 export const NAV_ITEMS: NavItem[] = [
   { title: "Home", url: "/dashboard", icon: Home },
   { title: "Events", url: "/dashboard/events", icon: Calendar },
@@ -30,7 +18,6 @@ export const NAV_ITEMS: NavItem[] = [
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 
-/* ---------------- Helpers ---------------- */
 const esc = (s: string): string => s.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
 
 export function AppSidebar() {
@@ -50,7 +37,6 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-border bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/40">
-      {/* BRAND / HEADER */}
       <div className="px-3 py-4 border-b border-border">
         <Link href="/dashboard" className="flex items-center gap-3 group" prefetch={false}>
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/10 group-hover:ring-primary/20 transition">
@@ -88,7 +74,6 @@ export function AppSidebar() {
                         )}
                         aria-current={isActive ? "page" : undefined}
                       >
-                        {/* Left active strip */}
                         <span
                           aria-hidden
                           className={cn(

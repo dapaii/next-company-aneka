@@ -42,7 +42,7 @@ export default async function EventsPage({
 
   // 4️⃣ Clamp & slice untuk pagination
   const total = sorted.length;
-  const { page, last } = clampPage(total, per, rawPage);
+  const { page } = clampPage(total, per, rawPage);
   const start = (page - 1) * per;
   const items = sorted.slice(start, start + per);
 

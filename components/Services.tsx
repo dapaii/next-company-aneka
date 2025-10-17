@@ -1,271 +1,212 @@
-"use client"
+"use client";
 
-import React, { useRef } from "react"
-import { motion, useScroll, useTransform } from "framer-motion"
-import { Package, Truck, Megaphone, Handshake, LucideIcon } from "lucide-react"
+import React, { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { Package, Truck, Megaphone, Handshake, ChevronLeft, ChevronRight, LucideIcon } from "lucide-react";
 
 interface CardData {
   icon: LucideIcon;
   title: string;
   description: string;
-  color: string;
+  from: string;
+  to: string;
   index: number;
 }
 
-export default function Services() {
-  const sectionRef = useRef<HTMLDivElement>(null)
+export default function ServicesHorizontal() {
+  const railRef = useRef<HTMLDivElement>(null);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(false);
 
   const cards: CardData[] = [
     {
       icon: Package,
       title: "Brand Distribution",
-      description: "Layanan distribusi profesional yang memastikan produk Anda menjangkau pasar dengan cepat, efisien, dan terukur. Kami mendukung berbagai jalur distribusi modern trade, general trade, hingga online marketplace di seluruh wilayah Asia Tenggara.",
-      color: "from-blue-600 to-blue-800",
-      index: 1
+      description:
+        "Distribusi profesional untuk menjangkau pasar lebih cepat, efisien, dan terukur—modern trade, general trade, hingga marketplace.",
+      from: "from-sky-700",
+      to: "to-sky-900",
+      index: 1,
     },
     {
       icon: Truck,
       title: "Supply Chain Management",
-      description: "Kami mengelola rantai pasok secara end-to-end untuk memastikan kelancaran arus barang dari pabrik hingga konsumen. Sistem logistik kami dirancang untuk efisiensi, keandalan, dan transparansi.",
-      color: "from-indigo-600 to-indigo-800",
-      index: 2
+      description:
+        "Pengelolaan end-to-end: perencanaan, warehouse, hingga last-mile dengan SLA dan visibilitas real-time.",
+      from: "from-slate-700",
+      to: "to-slate-900",
+      index: 2,
     },
     {
       icon: Megaphone,
-      title: "Makloon (OEM & ODM)",
-      description: "Kami menyediakan layanan makloon lengkap mulai dari formulasi, produksi, hingga pengemasan produk sesuai kebutuhan klien. Didukung oleh fasilitas produksi bersertifikasi dan tim ahli, kami membantu Anda membangun brand yang kuat dan kompetitif di pasar regional.",
-      color: "from-purple-600 to-purple-800",
-      index: 3
+      title: "Makloon (OEM/ODM)",
+      description:
+        "Formulasi, produksi, pengemasan—fasilitas tersertifikasi dan QC ketat untuk brand yang siap bersaing.",
+      from: "from-indigo-700",
+      to: "to-indigo-900",
+      index: 3,
     },
     {
       icon: Handshake,
-      title: "Partnership & Marketing Support",
-      description: "Kami tidak hanya mendistribusikan produk, tetapi juga membangun kemitraan strategis dengan klien. Melalui dukungan pemasaran, riset pasar, dan strategi promosi, kami membantu meningkatkan visibilitas dan performa brand di pasar Asia Tenggara.",
-      color: "from-pink-600 to-pink-800",
-      index: 4
-    }
-  ]
+      title: "Partnership & Marketing",
+      description:
+        "Kemitraan strategis plus dukungan pemasaran & riset untuk mendorong awareness dan pertumbuhan penjualan.",
+      from: "from-cyan-700",
+      to: "to-cyan-900",
+      index: 4,
+    },
+  ];
+
+  const syncEdges = () => {
+    const el = railRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setAtStart(scrollLeft <= 1);
+    setAtEnd(scrollLeft + clientWidth >= scrollWidth - 1);
+  };
+
+  useEffect(() => {
+    const el = railRef.current;
+    if (!el) return;
+    syncEdges();
+    const onScroll = () => syncEdges();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scroll = (dir: "prev" | "next") => {
+    const el = railRef.current;
+    if (!el) return;
+    const cardWidth = Math.min(520, Math.round(el.clientWidth * 0.86));
+    const gap = 20;
+    const step = cardWidth + gap;
+    el.scrollBy({ left: dir === "next" ? step : -step, behavior: "smooth" });
+  };
 
   return (
-    <section 
-      id="services"
-      ref={sectionRef} 
-      className="relative py-12 bg-cover bg-center bg-no-repeat overflow-hidden"
-      style={{
-        backgroundImage: "url('/bg-wave.png')",
-      }}
-    >
-      {/* Overlay */}
-      <div className="absolute inset-0 backdrop-blur-[2px] pointer-events-none" />
-      
-      {/* ✨ LEFT SIDE DECORATIONS */}
-      <div className="absolute left-0 top-0 bottom-0 w-40 hidden lg:flex flex-col justify-center gap-32 pl-8 pointer-events-none">
-        {cards.map((card, index) => (
-          <motion.div
-            key={`left-${index}`}
-            className="relative"
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: index * 0.2 }}
-          >
-            {/* Number */}
-            <motion.div
-              className="text-8xl font-black text-white/5 font-poppins"
-              animate={{
-                y: [0, -10, 0],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                delay: index * 0.5,
-              }}
-            >
-              0{index + 1}
-            </motion.div>
-            
-            {/* Animated Line */}
-            <motion.div
-              className="absolute top-1/2 -right-4 w-12 h-[2px] bg-gradient-to-r from-white/20 to-transparent"
-              initial={{ width: 0 }}
-              whileInView={{ width: 48 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: index * 0.2 + 0.5 }}
-            />
-          </motion.div>
-        ))}
-      </div>
+    <section className="relative overflow-hidden bg-gradient-to-b from-white to-gray-50 py-14 md:py-20">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_40%_at_50%_-10%,rgba(15,23,42,0.06),rgba(15,23,42,0)_70%)]"
+      />
 
-      {/* ✨ RIGHT SIDE DECORATIONS */}
-      <div className="absolute right-0 top-0 bottom-0 w-40 hidden lg:flex flex-col justify-center gap-32 pr-8 pointer-events-none">
-        {cards.map((card, index) => (
-          <motion.div
-            key={`right-${index}`}
-            className="relative flex flex-col items-end"
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: index * 0.2 }}
-          >
-            {/* Animated Dots */}
-            <div className="flex gap-2 mb-4">
-              {[0, 1, 2].map((dot) => (
-                <motion.div
-                  key={dot}
-                  className="w-2 h-2 rounded-full bg-white/20"
-                  animate={{
-                    scale: [1, 1.5, 1],
-                    opacity: [0.2, 0.5, 0.2],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    delay: dot * 0.3 + index * 0.5,
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Icon Shadow */}
-            <motion.div
-              className="w-16 h-16 rounded-xl bg-white/5 backdrop-blur-sm flex items-center justify-center"
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <card.icon size={28} className="text-white/30" strokeWidth={2} />
-            </motion.div>
-
-            {/* Vertical Line */}
-            <motion.div
-              className="absolute top-0 -left-4 w-[2px] h-full bg-gradient-to-b from-transparent via-white/10 to-transparent"
-              initial={{ height: 0 }}
-              whileInView={{ height: "100%" }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, delay: index * 0.2 }}
-            />
-          </motion.div>
-        ))}
-      </div>
-      
-      <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-2">
-        {/* Header */}
-        <motion.div 
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="text-5xl md:text-6xl font-poppins font-bold text-white mb-6">
-            Our Services
-          </h2>
-          <p className="text-white text-xl max-w-2xl mx-auto font-montserrat">
-            Layanan yang kami tawarkan untuk mendukung pertumbuhan bisnis Anda.
-          </p>
-        </motion.div>
-
-        {/* Stacking Cards Container */}
-        <div className="relative">
-          {cards.map((card, index) => (
-            <StackingCard 
-              key={index}
-              card={card}
-              index={index}
-              totalCards={cards.length}
-            />
-          ))}
-        </div>
-
-        {/* Spacer */}
-        <div className="h-[10vh]" />
-      </div>
-    </section>
-  )
-}
-
-interface StackingCardProps {
-  card: CardData;
-  index: number;
-  totalCards: number;
-}
-
-function StackingCard({ card, index }: StackingCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null)
-
-  const { scrollYProgress } = useScroll({
-    target: cardRef,
-    offset: ["start end", "center center", "end start"]
-  })
-
-  const scale = useTransform(
-    scrollYProgress,
-    [0, 0.5, 1],
-    [0.75, 1, 0.75]
-  )
-
-  const opacity = useTransform(
-    scrollYProgress,
-    [0, 0.3, 0.7, 1],
-    [0.6, 1, 1, 0.6]
-  )
-
-  const stickyTop = 80 + (index * 15)
-  const zIndex = 10 + index
-
-  return (
-    <div
-      ref={cardRef}
-      className="sticky mb-4"
-      style={{
-        top: `${stickyTop}px`,
-        zIndex: zIndex,
-      }}
-    >
-      <motion.div
-        style={{
-          scale,
-          opacity,
-        }}
-        className="w-full max-w-4xl mx-auto"
-      >
-        <div className={`bg-gradient-to-br ${card.color} rounded-3xl p-8 md:p-12 min-h-[300px] flex flex-col justify-between relative shadow-2xl overflow-hidden`}>
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-40">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
-          </div>
-
-          {/* Background Icon */}
-          <div className="absolute top-1/2 right-8 -translate-y-1/2 opacity-10 pointer-events-none select-none">
-            <card.icon 
-              size={300}
-              strokeWidth={1.5} 
-              className="text-white"
-            />
-          </div>
-
-          {/* Icon dengan circle background */}
-          <motion.div 
-            className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-md mb-6 relative z-10"
-            whileHover={{ scale: 1.15, rotate: 360 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15 }}
-          >
-            <card.icon size={40} className="text-white" strokeWidth={2.5} />
-          </motion.div>
-
-          {/* Content */}
-          <div className="relative z-10">
-            <h3 className="text-3xl md:text-4xl font-poppins font-black text-white mb-4 leading-tight">
-              {card.title}
-            </h3>
-            <p className="text-white/95 text-lg leading-relaxed font-montserrat max-w-2xl">
-              {card.description}
+      <div className="mx-auto max-w-7xl px-6 md:px-10">
+        <div className="mb-8 flex items-end justify-between gap-6 md:mb-10">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-600">
+              Layanan Kami
+            </p>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
+              Our Services
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-slate-600 md:text-base">
+              Horizontal, ringkas, responsif, dan tampak profesional.
             </p>
           </div>
 
-          {/* Bottom Gradient */}
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+          <div className="hidden shrink-0 items-center gap-2 md:flex">
+            <button
+              aria-label="Previous"
+              onClick={() => scroll("prev")}
+              disabled={atStart}
+              className={`rounded-xl border border-slate-200 bg-white p-2 shadow-sm transition hover:border-slate-300 hover:shadow disabled:cursor-not-allowed disabled:opacity-40`}
+            >
+              <ChevronLeft className="h-5 w-5 text-slate-700" />
+            </button>
+            <button
+              aria-label="Next"
+              onClick={() => scroll("next")}
+              disabled={atEnd}
+              className={`rounded-xl border border-slate-200 bg-white p-2 shadow-sm transition hover:border-slate-300 hover:shadow disabled:cursor-not-allowed disabled:opacity-40`}
+            >
+              <ChevronRight className="h-5 w-5 text-slate-700" />
+            </button>
+          </div>
         </div>
-      </motion.div>
-    </div>
-  )
+
+        <div className="relative">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-gray-50 to-transparent"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-gray-50 to-transparent"
+          />
+
+          <div
+            ref={railRef}
+            style={{ scrollSnapType: "x mandatory", scrollPadding: "0 24px" }}
+            className="hide-scrollbar -mx-6 flex gap-5 overflow-x-auto px-6 pb-2"
+          >
+            {cards.map((c) => (
+              <ServiceCard key={c.title} card={c} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <style jsx global>{`
+        .hide-scrollbar {
+          scrollbar-width: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+    </section>
+  );
+}
+
+function ServiceCard({ card }: { card: CardData }) {
+  return (
+    <motion.article
+      initial={{ opacity: 0, x: 56 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true, amount: 0.4 }}
+      transition={{ duration: 0.55, ease: "easeOut" }}
+      className="snap-start"
+    >
+      <div
+        className={`relative flex h-full w-[86vw] min-w-[86vw] flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-br ${card.from} ${card.to} p-6 shadow-2xl ring-1 ring-black/10 md:w-[520px] md:min-w-[520px] md:p-8`}
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.12),transparent_35%)]"
+        />
+        <div className="relative z-10 flex items-start gap-4">
+          <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md ring-1 ring-white/25 md:h-14 md:w-14">
+            <card.icon className="h-6 w-6 text-white md:h-7 md:w-7" />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-white md:text-2xl">
+              {card.title}
+            </h3>
+            <p className="mt-2 line-clamp-5 max-w-prose text-white/85 md:line-clamp-4 md:text-base">
+              {card.description}
+            </p>
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-8 flex items-center justify-between">
+          <div className="text-xs font-medium uppercase tracking-wider text-white/70">
+            Learn more
+          </div>
+          <div
+            aria-hidden
+            className="select-none text-5xl font-black leading-none text-white/10 md:text-6xl"
+          >
+            {String(card.index).padStart(2, "0")}
+          </div>
+        </div>
+
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-8 top-1/2 -translate-y-1/2 opacity-10"
+        >
+          <card.icon className="h-56 w-56 md:h-64 md:w-64" />
+        </div>
+      </div>
+    </motion.article>
+  );
 }

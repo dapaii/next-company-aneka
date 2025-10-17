@@ -2,11 +2,7 @@
 
 import Image from "next/image"
 import { motion } from "framer-motion"
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 
 export function ResizableDemo() {
   return (
@@ -15,12 +11,9 @@ export function ResizableDemo() {
       className="relative w-full bg-fixed bg-center bg-cover"
       style={{ backgroundImage: "url('/bgevent.webp')" }}
     >
-      {/* Overlay */}
       <div className="absolute inset-0 bg-black/70" />
 
-      {/* Konten Events */}
       <div className="relative w-full max-w-7xl mx-auto py-16 px-6">
-        {/* Judul Section */}
         <motion.div 
           className="text-start mb-12"
           initial={{ opacity: 0, y: 30 }}
@@ -36,12 +29,10 @@ export function ResizableDemo() {
           </p>
         </motion.div>
 
-        {/* Kotak-kotak Event */}
         <ResizablePanelGroup
           direction="horizontal"
           className="w-full max-w-7xl mx-auto rounded-lg min-h-[500px]"
         >
-          {/* Event 1 */}
           <ResizablePanel defaultSize={65}>
             <motion.div 
               className="relative h-[500px] w-full overflow-hidden rounded-lg group cursor-pointer"
@@ -62,7 +53,6 @@ export function ResizableDemo() {
                 />
               </motion.div>
 
-              {/* Overlay dengan animasi */}
               <motion.div 
                 className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col items-start justify-end text-left text-white p-6"
                 initial={{ opacity: 0.8 }}
@@ -86,7 +76,6 @@ export function ResizableDemo() {
                   Event terakhir dengan highlight perusahaan.
                 </motion.p>
 
-                {/* Decorative line dengan animasi */}
                 <motion.div
                   className="mt-4 h-1 bg-white rounded-full"
                   initial={{ width: 0 }}
@@ -95,7 +84,6 @@ export function ResizableDemo() {
                 />
               </motion.div>
 
-              {/* Glow effect on hover */}
               <motion.div
                 className="absolute inset-0 bg-white rounded-lg"
                 initial={{ opacity: 0 }}
@@ -109,7 +97,6 @@ export function ResizableDemo() {
 
           <ResizablePanel defaultSize={35}>
             <ResizablePanelGroup direction="vertical">
-              {/* Event 2 */}
               <ResizablePanel defaultSize={40}>
                 <motion.div 
                   className="relative h-full w-full overflow-hidden rounded-lg group cursor-pointer"

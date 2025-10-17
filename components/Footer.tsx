@@ -5,9 +5,9 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { Mail, MapPin, Phone } from "lucide-react"
 import { RiInstagramFill, RiTiktokFill } from "react-icons/ri"
+import Image from "next/image"
 
 export default function Footer() {
-  // Smooth scroll function
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)
     if (element) {
@@ -21,8 +21,6 @@ export default function Footer() {
       })
     }
   }
-
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -33,7 +31,6 @@ export default function Footer() {
       }
     }
   }
-
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -43,7 +40,6 @@ export default function Footer() {
     }
   }
 
-  // Quick Links
   const quickLinks = [
     { label: "Home", sectionId: null },
     { label: "About ADI", sectionId: "about" },
@@ -54,42 +50,44 @@ export default function Footer() {
   ]
 
   return (
-    <footer 
+    <footer
       id="contact"
       className="bg-gradient-to-b from-[#0f172a] to-[#020617] text-white overflow-hidden"
     >
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16">
-        {/* Main Footer Content */}
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
         >
-          
-          {/* Column 1: Company Info */}
           <motion.div className="space-y-4" variants={itemVariants}>
             <div className="flex items-center gap-2">
-              <img src="/PT ADI.png" alt="ADI Logo" className="h-12 w-auto" />
+              <Image
+                src="/PT-ADI.png"
+                alt="Team on site"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
             <p className="text-gray-400 text-sm leading-relaxed font-montserrat">
               PT Aneka Distribusi Indonesia - Mitra terpercaya untuk solusi distribusi berkualitas di Indonesia.
             </p>
-            {/* Social Media - HANYA INSTAGRAM & TIKTOK */}
             <div className="flex gap-3 pt-2">
               {[
-                { 
-                  icon: RiInstagramFill, 
-                  href: "https://www.instagram.com/remov.id?igsh=ZDNzZWIyenF5NXM0", 
+                {
+                  icon: RiInstagramFill,
+                  href: "https://www.instagram.com/remov.id?igsh=ZDNzZWIyenF5NXM0",
                   color: "hover:bg-pink-600",
-                  label: "Instagram" 
+                  label: "Instagram"
                 },
-                { 
-                  icon: RiTiktokFill, 
-                  href: "https://www.tiktok.com/@remov.id?_t=ZS-90VLIq6Iek0&_r=1", 
+                {
+                  icon: RiTiktokFill,
+                  href: "https://www.tiktok.com/@remov.id?_t=ZS-90VLIq6Iek0&_r=1",
                   color: "hover:bg-black",
-                  label: "TikTok" 
+                  label: "TikTok"
                 }
               ].map((social, index) => (
                 <motion.div
@@ -97,8 +95,8 @@ export default function Footer() {
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Link 
-                    href={social.href} 
+                  <Link
+                    href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`w-10 h-10 rounded-full bg-white/10 flex items-center justify-center ${social.color} transition-all duration-300`}
@@ -111,12 +109,11 @@ export default function Footer() {
             </div>
           </motion.div>
 
-          {/* Column 2: Quick Links */}
           <motion.div className="space-y-4" variants={itemVariants}>
             <h3 className="text-lg font-poppins font-bold text-white">Quick Links</h3>
             <ul className="space-y-3">
               {quickLinks.map((item, index) => (
-                <motion.li 
+                <motion.li
                   key={index}
                   whileHover={{ x: 5 }}
                   transition={{ type: "spring", stiffness: 300 }}
@@ -137,13 +134,11 @@ export default function Footer() {
               ))}
             </ul>
           </motion.div>
-
-          {/* Column 3: Our Brands */}
           <motion.div className="space-y-4" variants={itemVariants}>
             <h3 className="text-lg font-poppins font-bold text-white">Our Brands</h3>
             <ul className="space-y-3">
               {["Remov", "Supernova", "Ipro"].map((brand, index) => (
-                <motion.li 
+                <motion.li
                   key={index}
                   whileHover={{ x: 5 }}
                   transition={{ type: "spring", stiffness: 300 }}
@@ -155,8 +150,6 @@ export default function Footer() {
               ))}
             </ul>
           </motion.div>
-
-          {/* Column 4: Contact Info */}
           <motion.div className="space-y-4" variants={itemVariants}>
             <h3 className="text-lg font-poppins font-bold text-white">Contact Info</h3>
             <ul className="space-y-3">
@@ -179,9 +172,7 @@ export default function Footer() {
             </ul>
           </motion.div>
         </motion.div>
-
-        {/* Bottom Bar */}
-        <motion.div 
+        <motion.div
           className="mt-12 pt-8 border-t border-gray-800"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
