@@ -75,13 +75,10 @@ export default function HeroMedia() {
         ))}
       </div>
 
-      {/* Overlay gelap */}
       <div className="absolute inset-0 bg-black/50 z-10"></div>
 
-      {/* Text Layer - DENGAN ANIMASI */}
       <div className="absolute inset-0 z-20 flex items-end justify-start pb-32 md:pb-60 px-6 md:px-20">
         <div>
-          {/* Judul - Animasi fade + slide dari bawah */}
           <motion.h1 
             className="text-white text-3xl md:text-4xl lg:text-5xl font-poppins font-extrabold drop-shadow-lg max-w-xl"
             initial={{ opacity: 0, y: 50 }}
@@ -91,7 +88,6 @@ export default function HeroMedia() {
             Selamat Datang di PT Aneka Distribusi Indonesia
           </motion.h1>
           
-          {/* Paragraph - Animasi fade + slide dari bawah (delayed) */}
           <motion.p 
             className="text-white text-sm md:text-base font-montserrat mt-4 md:mt-6 drop-shadow-lg max-w-3xl"
             initial={{ opacity: 0, y: 30 }}

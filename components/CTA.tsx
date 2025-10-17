@@ -4,7 +4,6 @@ import { motion, useInView, useMotionValue, useTransform, animate } from "framer
 import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 
-// ✨ Counter Animation Component - FIXED
 function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: string }) {
   const count = useMotionValue(0)
   const rounded = useTransform(count, (latest) => Math.round(latest))
@@ -62,7 +61,6 @@ export default function CTA() {
     { x: 180, y: 160 }, { x: 680, y: 380 }
   ]
 
-  // ✨ Stats data dengan counter
   const stats = [
     { value: 24, suffix: "/7", label: "Customer Support", type: "number" },
     { value: 100, suffix: "%", label: "Komitmen Kualitas", type: "number" },
@@ -74,7 +72,6 @@ export default function CTA() {
       className="relative w-full py-32 bg-center bg-cover overflow-hidden"
       style={{ backgroundImage: "url('/jabat-tangan.jpg')" }}
     >
-      {/* Animated Gradient Overlay */}
       <motion.div 
         className="absolute inset-0 bg-gradient-to-br from-blue-900/95 via-blue-800/90 to-cyan-900/95"
         initial={{ opacity: 0 }}
@@ -83,7 +80,6 @@ export default function CTA() {
         transition={{ duration: 1 }}
       />
 
-      {/* Animated Particles Background */}
       {mounted && (
         <div className="absolute inset-0 pointer-events-none">
           {particlePositions.map((pos, i) => (
@@ -110,9 +106,7 @@ export default function CTA() {
         </div>
       )}
 
-      {/* Main Content */}
       <div className="relative z-10 max-w-6xl mx-auto px-6">
-        {/* Badge */}
         <motion.div
           className="flex justify-center mb-8"
           initial={{ opacity: 0, y: 30 }}
@@ -130,7 +124,6 @@ export default function CTA() {
           </motion.div>
         </motion.div>
 
-        {/* Main Heading */}
         <motion.div
           className="text-center mb-8"
           initial={{ opacity: 0, y: 30 }}
@@ -158,7 +151,6 @@ export default function CTA() {
           </motion.p>
         </motion.div>
 
-        {/* Features Grid */}
         <motion.div
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 max-w-3xl mx-auto"
           initial="hidden"
@@ -195,7 +187,6 @@ export default function CTA() {
           ))}
         </motion.div>
 
-        {/* CTA Buttons */}
         <motion.div 
           className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 mb-8"
           initial={{ opacity: 0, y: 30 }}
@@ -203,7 +194,6 @@ export default function CTA() {
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.7 }}
         >
-          {/* Primary CTA */}
           <motion.a
             href="#contact"
             className="group relative px-8 py-4 bg-white text-blue-900 font-bold rounded-full overflow-hidden font-poppins text-center"
@@ -222,7 +212,6 @@ export default function CTA() {
             </span>
           </motion.a>
 
-          {/* Secondary CTA */}
           <motion.a
             href="#services"
             className="group px-8 py-4 border-2 border-white text-white font-bold rounded-full backdrop-blur-sm hover:bg-white hover:text-blue-900 transition-all duration-300 font-poppins text-center"
@@ -236,7 +225,6 @@ export default function CTA() {
           </motion.a>
         </motion.div>
 
-        {/* ✅ Trust Indicators with Animated Counter - FIXED */}
         <motion.div
           className="grid grid-cols-3 gap-8 max-w-3xl mx-auto pt-8 border-t border-white/20"
           initial={{ opacity: 0, y: 20 }}

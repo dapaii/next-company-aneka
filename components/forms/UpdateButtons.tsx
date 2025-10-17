@@ -36,10 +36,8 @@ export default function UpdateButtons({ id }: Props) {
       const file = fileInput?.files?.[0] ?? null;
 
       if (file) {
-        // === PATCH multipart ===
         const fd = new FormData(form);
 
-        // validasi tanggal
         const startsAt = fd.get("startsAt");
         const endsAt = fd.get("endsAt");
         if (typeof startsAt === "string" && typeof endsAt === "string") {
@@ -65,7 +63,6 @@ export default function UpdateButtons({ id }: Props) {
           );
         }
       } else {
-        // === PUT JSON ===
         const fd = new FormData(form);
         const str = (name: string): string => {
           const v = fd.get(name);
@@ -117,7 +114,6 @@ export default function UpdateButtons({ id }: Props) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Gagal menyimpan";
       toast.error(msg);
-      // eslint-disable-next-line no-console
       console.error(err);
     } finally {
       setLoading(false);
@@ -125,12 +121,9 @@ export default function UpdateButtons({ id }: Props) {
   }
 
   function onCancel() {
-    // Jangan submit form; langsung navigate
     if (typeof window !== "undefined" && window.history.length > 1) {
-      // coba back; kasih fallback untuk direct-open case
       window.history.back();
       setTimeout(() => {
-        // kalau masih di halaman yg sama (mis. nggak punya history), fallback
         if (window.location.pathname.includes("/dashboard/events/") && window.location.pathname.endsWith("/edit")) {
           router.replace("/dashboard/events");
         }

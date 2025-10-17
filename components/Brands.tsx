@@ -5,13 +5,7 @@ import Image from "next/image"
 import { motion } from "framer-motion"
 import Autoplay from "embla-carousel-autoplay"
 import { Card, CardContent } from "@/components/ui/card"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 
 export default function Brands() {
   const plugin = useRef(
@@ -33,7 +27,6 @@ export default function Brands() {
         backgroundPosition: "center",
       }}
     >
-      {/* Subtle animated background gradient */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-900/20 to-transparent"
         animate={{
@@ -45,7 +38,6 @@ export default function Brands() {
         }}
       />
 
-      {/* Carousel Section */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -86,10 +78,8 @@ export default function Brands() {
         </Carousel>
       </motion.div>
 
-      {/* Text Section with Elegant Animations */}
       <div className="max-w-3xl mx-auto px-4 pb-10 text-center py-10 relative z-10">
         
-        {/* Animated Title - SIMPLIFIED */}
         <motion.h2 
           className="text-white text-4xl md:text-5xl font-poppins font-extrabold drop-shadow-lg mb-6"
           initial={{ opacity: 0, y: 30 }}
@@ -114,7 +104,6 @@ export default function Brands() {
           ))}
         </motion.h2>
 
-        {/* Animated Divider Line */}
         <motion.div
           className="w-24 h-1 bg-white/50 mx-auto mb-8 rounded-full"
           initial={{ width: 0, opacity: 0 }}
@@ -123,7 +112,6 @@ export default function Brands() {
           transition={{ duration: 0.8, delay: 0.3 }}
         />
 
-        {/* Animated Description */}
         <motion.p 
           className="text-white text-base md:text-lg leading-relaxed font-montserrat drop-shadow-lg"
           initial={{ opacity: 0, y: 20 }}
@@ -134,7 +122,6 @@ export default function Brands() {
           {description}
         </motion.p>
 
-        {/* Decorative Elements */}
         <motion.div
           className="absolute -left-8 top-1/2 w-16 h-16 border-2 border-white/10 rounded-full"
           initial={{ scale: 0, opacity: 0 }}
