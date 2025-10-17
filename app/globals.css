@@ -142,17 +142,24 @@
     transform: scale(1);
   }
   100% {
-    transform: scale(1.1); /* zoom lalu tetap di 1.1 */
+    transform: scale(1.1);
   }
 }
 
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
 
+/* ✅ SMOOTH SCROLL GLOBAL - TAMBAHAN BARU */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
 
-
-
-
-
-
-
-
-
+/* Respect user's motion preferences (Accessibility) */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
