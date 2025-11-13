@@ -4,6 +4,9 @@ import PublicControlsIsland from "@/components/events/controls/PublicControlsIsl
 import PublicEventsGrid from "@/components/events/list/PublicEventsGrid";
 import PublicPager from "@/components/events/pager/PublicPager";
 
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
 import type { EventDto } from "@/types/events";
 import type { Scope, Sort } from "@/types/filters";
 
@@ -17,6 +20,7 @@ export const revalidate = 60;
 export default async function PublicEventsPage({
   searchParams,
 }: { searchParams: SP | Promise<SP> }) {
+
   // 1) Data & filter hanya published
   const events = await fetchEvents();
   const published: EventDto[] = events.filter((e) => e.status === "published");
@@ -27,7 +31,7 @@ export default async function PublicEventsPage({
   const { rawPage, per }     = parsePagination(sp, { defaultPer: 6, cap: 100 });
   const filtered             = applyFilters(published, q, scope, sort);
 
-  // 3) Pagination (clamp + slice)
+  // 3) Pagination
   const total        = filtered.length;
   const { page }     = clampPage(total, per, rawPage);
   const start        = (page - 1) * per;
@@ -36,15 +40,23 @@ export default async function PublicEventsPage({
   return (
     <main className="p-4 sm:p-6">
       <div className="mx-auto max-w-6xl space-y-6">
+        
         {/* Header */}
         <section className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight">Event</h1>
           <p className="text-sm text-muted-foreground">
             Jelajahi event yang sedang / akan berlangsung.
           </p>
+
+          {/* 🔥 Tombol kembali */}
+          <Link href="/" className="inline-block">
+            <Button variant="outline" className="mt-2">
+              ← Kembali ke Homepage
+            </Button>
+          </Link>
         </section>
 
-        {/* Client-only controls */}
+        {/* Controls */}
         <PublicControlsIsland
           initialQuery={q}
           initialScope={scope as Scope}
@@ -68,7 +80,7 @@ export default async function PublicEventsPage({
           </div>
         )}
 
-        {/* Pager (pakai parsePagination/clampPage yang sudah ada) */}
+        {/* Pager */}
         <PublicPager
           page={page}
           per={per}

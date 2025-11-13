@@ -2,10 +2,10 @@
 
 import React from "react"
 import Link from "next/link"
+import Image from "next/image"  // ✅ TAMBAH INI
 import { motion } from "framer-motion"
 import { Mail, MapPin, Phone } from "lucide-react"
 import { RiInstagramFill, RiTiktokFill } from "react-icons/ri"
-import Image from "next/image"
 
 export default function Footer() {
   const scrollToSection = (sectionId: string) => {
@@ -21,6 +21,7 @@ export default function Footer() {
       })
     }
   }
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -31,6 +32,7 @@ export default function Footer() {
       }
     }
   }
+
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -42,7 +44,7 @@ export default function Footer() {
 
   const quickLinks = [
     { label: "Home", sectionId: null },
-    { label: "About ADI", sectionId: "about" },
+    { label: "About ADI", sectionId: "aboutus" },
     { label: "Our Brand", sectionId: "brands" },
     { label: "Services", sectionId: "services" },
     { label: "Event", sectionId: "event" },
@@ -50,26 +52,29 @@ export default function Footer() {
   ]
 
   return (
-    <footer
+    <footer 
       id="contact"
       className="bg-gradient-to-b from-[#0f172a] to-[#020617] text-white overflow-hidden"
     >
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16">
-        <motion.div
+        <motion.div 
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
         >
+          
+          {/* Column 1: Company Info */}
           <motion.div className="space-y-4" variants={itemVariants}>
             <div className="flex items-center gap-2">
-              <Image
-                src="/PT-ADI.png"
-                alt="Team on site"
-                fill
-                className="object-cover"
-                priority
+              {/* ✅ HANYA FIX INI: <img> → <Image> */}
+              <Image 
+                src="/PT ADI.png" 
+                alt="ADI Logo" 
+                width={48}
+                height={48}
+                className="h-12 w-auto"
               />
             </div>
             <p className="text-gray-400 text-sm leading-relaxed font-montserrat">
@@ -77,17 +82,17 @@ export default function Footer() {
             </p>
             <div className="flex gap-3 pt-2">
               {[
-                {
-                  icon: RiInstagramFill,
-                  href: "https://www.instagram.com/remov.id?igsh=ZDNzZWIyenF5NXM0",
+                { 
+                  icon: RiInstagramFill, 
+                  href: "https://www.instagram.com/remov.id?igsh=ZDNzZWIyenF5NXM0", 
                   color: "hover:bg-pink-600",
-                  label: "Instagram"
+                  label: "Instagram" 
                 },
-                {
-                  icon: RiTiktokFill,
-                  href: "https://www.tiktok.com/@remov.id?_t=ZS-90VLIq6Iek0&_r=1",
+                { 
+                  icon: RiTiktokFill, 
+                  href: "https://www.tiktok.com/@remov.id?_t=ZS-90VLIq6Iek0&_r=1", 
                   color: "hover:bg-black",
-                  label: "TikTok"
+                  label: "TikTok" 
                 }
               ].map((social, index) => (
                 <motion.div
@@ -95,8 +100,8 @@ export default function Footer() {
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Link
-                    href={social.href}
+                  <Link 
+                    href={social.href} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`w-10 h-10 rounded-full bg-white/10 flex items-center justify-center ${social.color} transition-all duration-300`}
@@ -109,11 +114,12 @@ export default function Footer() {
             </div>
           </motion.div>
 
+          {/* Column 2: Quick Links */}
           <motion.div className="space-y-4" variants={itemVariants}>
             <h3 className="text-lg font-poppins font-bold text-white">Quick Links</h3>
             <ul className="space-y-3">
               {quickLinks.map((item, index) => (
-                <motion.li
+                <motion.li 
                   key={index}
                   whileHover={{ x: 5 }}
                   transition={{ type: "spring", stiffness: 300 }}
@@ -134,22 +140,36 @@ export default function Footer() {
               ))}
             </ul>
           </motion.div>
+
+          {/* Column 3: Our Brands - EXTERNAL LINKS */}
           <motion.div className="space-y-4" variants={itemVariants}>
             <h3 className="text-lg font-poppins font-bold text-white">Our Brands</h3>
             <ul className="space-y-3">
-              {["Remov", "Supernova", "Ipro"].map((brand, index) => (
-                <motion.li
+              {[
+                { name: "Remov", url: "https://remov.co.id/" },
+                { name: "Supernova", url: "https://remov.co.id/" },
+                { name: "Ipro", url: "https://remov.co.id/" },
+                { name: "Seri Glow", url: "https://remov.co.id/" }
+              ].map((brand, index) => (
+                <motion.li 
                   key={index}
                   whileHover={{ x: 5 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
-                  <Link href={`/brands/${brand.toLowerCase()}`} className="text-gray-400 hover:text-white transition-colors duration-200 inline-block text-sm">
-                    {brand}
+                  <Link 
+                    href={brand.url} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-white transition-colors duration-200 inline-block text-sm"
+                  >
+                    {brand.name}
                   </Link>
                 </motion.li>
               ))}
             </ul>
           </motion.div>
+
+          {/* Column 4: Contact Info */}
           <motion.div className="space-y-4" variants={itemVariants}>
             <h3 className="text-lg font-poppins font-bold text-white">Contact Info</h3>
             <ul className="space-y-3">
@@ -159,7 +179,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3 text-gray-400 text-sm">
                 <Phone size={18} className="flex-shrink-0 text-green-400" />
-                <a href="tel:+6282116111530" className="hover:text-white transition-colors">
+                <a href="tel:+62811222334" className="hover:text-white transition-colors">
                   +62 811-222-334
                 </a>
               </li>
@@ -172,7 +192,9 @@ export default function Footer() {
             </ul>
           </motion.div>
         </motion.div>
-        <motion.div
+
+        {/* Bottom Bar */}
+        <motion.div 
           className="mt-12 pt-8 border-t border-gray-800"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

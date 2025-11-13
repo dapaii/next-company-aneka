@@ -2,9 +2,16 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Menu, X, UserCircle2 } from "lucide-react"
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu"
 import Image from "next/image"
+import { Menu, X, UserCircle2 } from "lucide-react"
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu"
 
 interface BrandItem {
   title: string;
@@ -15,18 +22,23 @@ interface BrandItem {
 const brands: BrandItem[] = [
   {
     title: "Remov",
-    href: "/brands/remov",
-    description: "Description for Brand 1",
+    href: "#brands",
+    description: "",
   },
   {
     title: "Supernova",
-    href: "/brands/supernova",
-    description: "Description for Brand 2",
+    href: "#brands",
+    description: "",
   },
   {
     title: "Ipro",
-    href: "/brands/ipro",
-    description: "Description for Brand 3",
+    href: "#brands",
+    description: "",
+  },
+  {
+    title: "Seri Glow",
+    href: "#brands",
+    description: "",
   },
 ]
 
@@ -106,13 +118,15 @@ export function Navbar() {
         }`}
       >
         <div className="flex items-center justify-between w-full max-w-7xl px-4 md:px-8">
-          {/* Logo Section */}
+          {/* Logo Section - ✅ HANYA FIX INI */}
           <Link href="#home" className="flex items-center gap-2 min-w-0">
-            <Image
-                src="/PT-ADI.png"
-                alt="ADI Logo"
-                className="h-12 md:h-16 w-auto flex-shrink-0"
-              />
+            <Image 
+              src="/PT ADI.png" 
+              alt="ADI Logo" 
+              width={64}
+              height={48}
+              className="h-12 md:h-16 w-auto flex-shrink-0" 
+            />
             <span className="hidden md:block text-white font-poppins font-semibold text-lg text-outline text-outline-strong whitespace-nowrap">
               Aneka Distribusi Indonesia
             </span>
@@ -216,6 +230,7 @@ export function Navbar() {
         </div>
       </nav>
 
+      {/* MOBILE MENU */}
       <div
         className={`fixed inset-0 bg-gradient-to-b from-[#1a1a2e] to-[#16213e] z-40 flex flex-col items-center justify-center transition-all duration-500 ease-in-out md:hidden ${
           menuOpen ? "opacity-100 visible" : "opacity-0 invisible"

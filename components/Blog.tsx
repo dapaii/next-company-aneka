@@ -10,10 +10,12 @@ export default function Blog() {
       className="relative w-full py-24 overflow-hidden bg-[#193764] bg-cover bg-center"
       style={{ backgroundImage: "url('/bg-wave.png')" }}
     >
+      {/* Overlay untuk readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#193764]/10 via-[#193764]/10 to-[#193764]/10" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-6">
         
+        {/* Professional Header */}
         <motion.div 
           className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
@@ -21,6 +23,7 @@ export default function Blog() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
+          {/* Status Badge */}
           <motion.div
             className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -32,15 +35,18 @@ export default function Blog() {
             <span className="text-white/90 text-sm font-medium">In Development</span>
           </motion.div>
 
+          {/* Title */}
           <h2 className="text-4xl md:text-5xl font-poppins font-bold text-white mb-4">
             Blog & Articles
           </h2>
           
+          {/* Subtitle */}
           <p className="text-white/80 text-lg font-montserrat max-w-2xl mx-auto">
             Insights and updates about distribution industry
           </p>
         </motion.div>
 
+        {/* Main Content Card */}
         <motion.div
           className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-12 shadow-2xl"
           initial={{ opacity: 0, y: 30 }}
@@ -48,6 +54,7 @@ export default function Blog() {
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.2 }}
         >
+          {/* Icon */}
           <div className="flex justify-center mb-8">
             <motion.div 
               className="w-24 h-24 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center"
@@ -60,6 +67,7 @@ export default function Blog() {
             </motion.div>
           </div>
 
+          {/* Message */}
           <div className="text-center mb-12">
             <motion.h3 
               className="text-3xl font-poppins font-bold text-white mb-4"
@@ -82,6 +90,7 @@ export default function Blog() {
             </motion.p>
           </div>
 
+          {/* Feature Grid - Professional */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
             {[
               {
@@ -124,8 +133,10 @@ export default function Blog() {
             ))}
           </div>
 
+          {/* Divider */}
           <div className="border-t border-white/20 my-10" />
 
+          {/* Launch Info */}
           <motion.div 
             className="text-center"
             initial={{ opacity: 0 }}
@@ -140,6 +151,7 @@ export default function Blog() {
               </span>
             </div>
             
+            {/* Contact */}
             <p className="text-white/70 font-montserrat">
               For inquiries, please contact us at{" "}
               <a 
@@ -152,6 +164,7 @@ export default function Blog() {
           </motion.div>
         </motion.div>
 
+        {/* Bottom note */}
         <motion.div
           className="text-center mt-10"
           initial={{ opacity: 0 }}

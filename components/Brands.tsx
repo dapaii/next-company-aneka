@@ -2,10 +2,17 @@
 
 import { useRef } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { motion } from "framer-motion"
 import Autoplay from "embla-carousel-autoplay"
 import { Card, CardContent } from "@/components/ui/card"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 
 export default function Brands() {
   const plugin = useRef(
@@ -16,6 +23,29 @@ export default function Brands() {
   const titleWords = title.split(" ")
 
   const description = "Kami menaungi beragam merek unggulan yang tumbuh bersama pelanggan di Asia Tenggara. Melalui Supernova, iPro, dan Remov, kami menyediakan produk dan layanan yang inovatif, terpercaya, dan sesuai dengan kebutuhan pasar modern. Komitmen kami adalah menghadirkan nilai tambah melalui kolaborasi, kualitas, dan inovasi berkelanjutan."
+
+  const brands = [
+    {
+      name: "Remov",
+      image: "/Remov.png",
+      url: "https://remov.co.id/"
+    },
+    {
+      name: "Supernova",
+      image: "/Supernova.png",
+      url: "https://remov.co.id/"
+    },
+    {
+      name: "Ipro",
+      image: "/Ipro.png",
+      url: "https://remov.co.id/"
+    },
+    {
+      name: "Seri Glow",
+      image: "/seriglow.jpg",
+      url: "https://remov.co.id/"
+    }
+  ]
 
   return (
     <section
@@ -53,25 +83,38 @@ export default function Brands() {
           className="w-full max-w-4xl mx-auto relative z-10"
         >
           <CarouselContent>
-            {["/Remov.png", "/Supernova.png", "/Ipro.png", "/Remov.png", "/Supernova.png", "/Ipro.png"].map(
-              (src, index) => (
-                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                  <div className="p-1">
-                    <Card>
-                      <CardContent className="flex aspect-square items-center justify-center p-6">
-                        <Image
-                          src={src}
-                          alt={`Brand ${index + 1}`}
-                          width={200}
-                          height={200}
-                          className="object-contain"
-                        />
+            {brands.map((brand, index) => (
+              <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                <div className="p-1">
+                  <Link 
+                    href={brand.url} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <Card className="border-0 shadow-lg cursor-pointer">
+                      <CardContent className="flex items-center justify-center p-6 h-64 bg-white overflow-hidden">
+                        <div className="relative w-full h-full flex items-center justify-center">
+                          <Image
+                            src={brand.image}
+                            alt={brand.name}
+                            width={300}
+                            height={300}
+                            className="object-contain max-w-full max-h-full"
+                            style={{ 
+                              width: 'auto', 
+                              height: 'auto',
+                              maxWidth: '100%',
+                              maxHeight: '100%'
+                            }}
+                          />
+                        </div>
                       </CardContent>
                     </Card>
-                  </div>
-                </CarouselItem>
-              )
-            )}
+                  </Link>
+                </div>
+              </CarouselItem>
+            ))}
           </CarouselContent>
           <CarouselPrevious />
           <CarouselNext />
@@ -79,7 +122,6 @@ export default function Brands() {
       </motion.div>
 
       <div className="max-w-3xl mx-auto px-4 pb-10 text-center py-10 relative z-10">
-        
         <motion.h2 
           className="text-white text-4xl md:text-5xl font-poppins font-extrabold drop-shadow-lg mb-6"
           initial={{ opacity: 0, y: 30 }}
