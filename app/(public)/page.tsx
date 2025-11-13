@@ -5,7 +5,6 @@ import { ResizableDemo } from "@/components/Events";
 import Maps from "@/components/Maps";
 import Footer from "@/components/Footer";
 import Services from "@/components/Services";
-import Blog from "@/components/Blog";
 import CTA from "@/components/CTA";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { Navbar } from "@/components/Navbar";
@@ -25,8 +24,6 @@ export default function Home() {
         <Services />
         <div className="w-full h-[1px] bg-white/40"></div>
         <ResizableDemo />
-        <div className="w-full h-[1px] bg-white/40"></div>
-        <Blog />
         <div className="w-full h-[1px] bg-white/40"></div>
         <CTA />
         <div className="w-full h-[1px] bg-white/40"></div>
