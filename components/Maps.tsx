@@ -15,7 +15,7 @@ export default function Maps() {
     {
       icon: Clock,
       title: "Working Hours",
-      content: "Mon - Fri: 08:00 - 17:00",
+      content: "Mon - Sat : 08:00 - 17:00",
       color: "text-green-400"
     },
   ]

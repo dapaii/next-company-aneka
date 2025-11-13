@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-const images = ["/tesss.jpg", "/gudang2.jpg", "/gudang3.jpg"];
+const images = ["/papi-5.jpg", "/papi-2.jpg", "/produk.png"];
 
 export default function HeroMedia() {
   const [currentIndex, setCurrentIndex] = useState(0);

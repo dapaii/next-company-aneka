@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { Calendar, Home, PlusCircle, Shield, Settings } from "lucide-react";
+import { Calendar, Home, PlusCircle, Shield} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -27,7 +27,6 @@ export const NAV_ITEMS: NavItem[] = [
   { title: "Home", url: "/dashboard", icon: Home },
   { title: "Events", url: "/dashboard/events", icon: Calendar },
   { title: "New Event", url: "/dashboard/events/new", icon: PlusCircle },
-  { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 
 /* ---------------- Helpers ---------------- */

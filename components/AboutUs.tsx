@@ -8,7 +8,7 @@ export default function AboutUs() {
     <section
       id="aboutus"
       className="relative w-full min-h-[700px] bg-scroll md:bg-fixed bg-center bg-cover flex items-center justify-center overflow-hidden"
-      style={{ backgroundImage: "url('/aboutusbg.webp')" }}
+      style={{ backgroundImage: "url('/papi-1.jpg')" }}
     >
       {/* Overlay */}
       <motion.div 

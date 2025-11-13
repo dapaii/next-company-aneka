@@ -13,7 +13,7 @@ export function ResizableDemo() {
     <section
       id="event"
       className="relative w-full bg-fixed bg-center bg-cover"
-      style={{ backgroundImage: "url('/bgevent.webp')" }}
+      style={{ backgroundImage: "url('/papi-4.jpg')" }}
     >
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/70" />
@@ -32,7 +32,7 @@ export function ResizableDemo() {
             Events
           </h2>
           <p className="text-white font-montserrat font-semibold mt-2 drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]">
-            Kami secara aktif berpartisipasi dalam berbagai kegiatan promosi, pameran, dan kolaborasi lintas industri di tingkat nasional maupun regional Asia Tenggara. Melalui berbagai event seperti brand activation, product launching, hingga business networking, kami memperkuat hubungan dengan mitra, memperluas jangkauan pasar, dan memperkenalkan inovasi produk dari brand-brand yang kami distribusikan dan produksi. Setiap kegiatan menjadi wujud komitmen kami dalam mendukung pertumbuhan berkelanjutan bagi seluruh mitra bisnis kami.
+            Kami aktif berpartisipasi dalam berbagai event untuk memperkuat kemitraan dan memperkenalkan inovasi produk di pasar nasional maupun regional
           </p>
         </motion.div>
 
@@ -54,7 +54,7 @@ export function ResizableDemo() {
                 transition={{ duration: 0.6, ease: "easeOut" }}
               >
                 <Image
-                  src="/event1.webp"
+                  src="/papi-3.jpg"
                   alt="Event 1"
                   fill
                   priority
@@ -122,7 +122,7 @@ export function ResizableDemo() {
                     transition={{ duration: 0.6, ease: "easeOut" }}
                   >
                     <Image
-                      src="/event2.jpeg"
+                      src="/papi-3.jpg"
                       alt="Event 2"
                       fill
                       className="object-cover"
@@ -184,7 +184,7 @@ export function ResizableDemo() {
                     transition={{ duration: 0.6, ease: "easeOut" }}
                   >
                     <Image
-                      src="/event3.jpeg"
+                      src="/papi-3.jpg"
                       alt="Event 3"
                       fill
                       className="object-cover"
