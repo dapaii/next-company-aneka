@@ -7,9 +7,6 @@ import path from "path";
 
 export const runtime = "nodejs";
 
-/* =========================
- * Utils
- * ========================= */
 function slugify(input: string): string {
   return (input ?? "")
     .trim()
@@ -34,9 +31,6 @@ function isFile(v: FormDataEntryValue): v is File {
   return v instanceof File;
 }
 
-/* =========================
- * Schemas
- * ========================= */
 const StatusEnum = z.enum(["draft", "published", "archived"]);
 
 const EventBase = z.object({
@@ -59,9 +53,6 @@ const EventCreateJson = EventBase.extend({
   photos: z.array(z.string()).optional().default([]),
 });
 
-/* =========================
- * Constants
- * ========================= */
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_MIME: ReadonlySet<string> = new Set([
   "image/png",
@@ -71,10 +62,7 @@ const ALLOWED_MIME: ReadonlySet<string> = new Set([
 ]);
 const BUCKET = process.env.SUPABASE_BUCKET_NAME!;
 
-/* =========================
- * GET: list events
- * ========================= */
-export async function GET(_req: NextRequest) {
+export async function GET() {
   const isAdmin = !!(await requireAdmin().catch(() => null));
   const where = isAdmin ? {} : { status: "published" as const };
   const events = await prisma.event.findMany({
@@ -84,9 +72,6 @@ export async function GET(_req: NextRequest) {
   return NextResponse.json({ events });
 }
 
-/* =========================
- * POST: create (JSON or multipart)
- * ========================= */
 export async function POST(req: NextRequest) {
   let sess;
   try {
@@ -97,7 +82,6 @@ export async function POST(req: NextRequest) {
 
   const ct = req.headers.get("content-type") ?? "";
 
-  // ---------- JSON mode ----------
   if (ct.includes("application/json")) {
     const body = await req.json();
     const parsed = EventCreateJson.safeParse(body);
@@ -125,7 +109,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ event: created }, { status: 201 });
   }
 
-  // ---------- Multipart mode ----------
   if (ct.includes("multipart/form-data")) {
     const form = await req.formData();
 
@@ -157,12 +140,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1️⃣ Buat event tanpa foto dulu
     const created = await prisma.event.create({
       data: { ...parsed.data, slug, createdById: sess.sub, photos: [] },
     });
 
-    // 2️⃣ Upload file ke Supabase Storage
     const entries = form.getAll("photos");
     const files = entries.filter(isFile);
     const savedUrls: string[] = [];
@@ -187,7 +168,6 @@ export async function POST(req: NextRequest) {
       const arrayBuffer = await f.arrayBuffer();
       const buffer = new Uint8Array(arrayBuffer);
 
-      // Upload ke Supabase Storage
       const { data, error } = await supabase.storage
         .from(BUCKET)
         .upload(`events/${created.id}/${fileName}`, buffer, {
@@ -200,13 +180,11 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      // Dapatkan URL publik
       const { data: publicUrlData } = supabase.storage.from(BUCKET).getPublicUrl(data.path);
       const url = publicUrlData?.publicUrl ?? null;
       if (url) savedUrls.push(url);
     }
 
-    // 3️⃣ Update event dengan URL foto
     const updated = await prisma.event.update({
       where: { id: created.id },
       data: { photos: savedUrls },

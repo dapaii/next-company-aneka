@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import Image from "next/image"  // ✅ TAMBAH INI
+import Image from "next/image"
 import { Menu, X, UserCircle2 } from "lucide-react"
 import {
   NavigationMenu,
@@ -22,23 +22,23 @@ interface BrandItem {
 const brands: BrandItem[] = [
   {
     title: "Remov",
-    href: "/brands/remov",
-    description: "-",
+    href: "#brands",
+    description: "",
   },
   {
     title: "Supernova",
-    href: "/brands/supernova",
-    description: "-",
+    href: "#brands",
+    description: "",
   },
   {
     title: "Ipro",
-    href: "/brands/ipro",
-    description: "-",
+    href: "#brands",
+    description: "",
   },
   {
     title: "Seri Glow",
-    href: "/brands/ipro",
-    description: "-",
+    href: "#brands",
+    description: "",
   },
 ]
 

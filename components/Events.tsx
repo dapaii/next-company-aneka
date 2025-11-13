@@ -1,6 +1,8 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { motion } from "framer-motion"
 import {
   ResizableHandle,
@@ -8,7 +10,44 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
 
+type EventItem = {
+  id: string
+  title: string
+  photos: string[]
+  startsAt: string
+}
+
 export function ResizableDemo() {
+  const [latest, setLatest] = useState<EventItem[]>([])
+
+  useEffect(() => {
+    async function load() {
+      const res = await fetch("/api/events", { cache: "no-store" })
+      const json = await res.json()
+
+      // API returns { events: [...] }
+      const events: EventItem[] = json.events ?? []
+
+      // filter published (API already handles it)
+      const published = events
+
+      // sort by startsAt DESC (terbaru)
+      const sorted = [...published].sort(
+        (a, b) =>
+          new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime()
+      )
+
+      // ambil 3 event terbaru
+      setLatest(sorted.slice(0, 3))
+    }
+
+    load()
+  }, [])
+
+  // helper
+  const img = (i: number) => latest[i]?.photos?.[0] || "/papi-3.jpg"
+  const title = (i: number) => latest[i]?.title || `Event ${i + 1}`
+
   return (
     <section
       id="event"
@@ -18,10 +57,11 @@ export function ResizableDemo() {
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/70" />
 
-      {/* Konten Events */}
+      {/* Content */}
       <div className="relative w-full max-w-7xl mx-auto py-16 px-6">
-        {/* Judul Section */}
-        <motion.div 
+        
+        {/* Title */}
+        <motion.div
           className="text-start mb-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -32,206 +72,203 @@ export function ResizableDemo() {
             Events
           </h2>
           <p className="text-white font-montserrat font-semibold mt-2 drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]">
-            Kami aktif berpartisipasi dalam berbagai event untuk memperkuat kemitraan dan memperkenalkan inovasi produk di pasar nasional maupun regional
+            Kami aktif berpartisipasi dalam berbagai event untuk memperkuat kemitraan 
+            dan memperkenalkan inovasi produk di pasar nasional maupun regional
           </p>
         </motion.div>
 
-        {/* Kotak-kotak Event */}
+        {/* Event Panels */}
         <ResizablePanelGroup
           direction="horizontal"
-          className="w-full max-w-7xl mx-auto rounded-lg min-h-[500px]"
+          className="w-full max-w-7xl mx-auto min-h-[500px]"
         >
-          {/* Event 1 */}
+          {/* EVENT 1 */}
           <ResizablePanel defaultSize={65}>
-            <motion.div 
-              className="relative h-[500px] w-full overflow-hidden rounded-lg group cursor-pointer"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            >
+            <Link href="/events" className="block h-[500px] w-full">
               <motion.div
-                className="relative h-full w-full"
-                whileHover={{ scale: 1.1 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="relative h-full w-full overflow-hidden group cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
               >
-                <Image
-                  src="/papi-3.jpg"
-                  alt="Event 1"
-                  fill
-                  priority
-                  className="object-cover"
-                />
-              </motion.div>
-
-              {/* Overlay dengan animasi */}
-              <motion.div 
-                className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col items-start justify-end text-left text-white p-6"
-                initial={{ opacity: 0.8 }}
-                whileHover={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <motion.h3 
-                  className="text-2xl font-poppins font-bold"
-                  initial={{ y: 10, opacity: 0.8 }}
-                  whileHover={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  Event 1
-                </motion.h3>
-                <motion.p 
-                  className="text-sm font-montserrat font-semibold mt-2"
-                  initial={{ y: 10, opacity: 0.8 }}
-                  whileHover={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.3, delay: 0.05 }}
-                >
-                  Event terakhir dengan highlight perusahaan.
-                </motion.p>
-
-                {/* Decorative line dengan animasi */}
                 <motion.div
-                  className="mt-4 h-1 bg-white rounded-full"
-                  initial={{ width: 0 }}
-                  whileHover={{ width: "100px" }}
-                  transition={{ duration: 0.4 }}
+                  className="relative h-full w-full"
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                >
+                  <Image
+                    src={img(0)}
+                    alt={title(0)}
+                    fill
+                    priority
+                    className="object-cover"
+                  />
+                </motion.div>
+
+                {/* Overlay */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent 
+                  flex flex-col items-start justify-end text-left text-white p-6"
+                  initial={{ opacity: 0.8 }}
+                  whileHover={{ opacity: 1 }}
+                >
+                  <motion.h3
+                    className="text-2xl font-poppins font-bold"
+                    initial={{ y: 10, opacity: 0.8 }}
+                    whileHover={{ y: 0, opacity: 1 }}
+                  >
+                    {title(0)}
+                  </motion.h3>
+
+                  <motion.p
+                    className="text-sm font-montserrat font-semibold mt-2"
+                    initial={{ y: 10, opacity: 0.8 }}
+                    whileHover={{ y: 0, opacity: 1 }}
+                  >
+                    Event highlight terbaru kami.
+                  </motion.p>
+
+                  <motion.div
+                    className="mt-4 h-1 bg-white"
+                    initial={{ width: 0 }}
+                    whileHover={{ width: "100px" }}
+                  />
+                </motion.div>
+
+                {/* Glow */}
+                <motion.div
+                  className="absolute inset-0 bg-white"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 0.1 }}
                 />
               </motion.div>
-
-              {/* Glow effect on hover */}
-              <motion.div
-                className="absolute inset-0 bg-white rounded-lg"
-                initial={{ opacity: 0 }}
-                whileHover={{ opacity: 0.1 }}
-                transition={{ duration: 0.3 }}
-              />
-            </motion.div>
+            </Link>
           </ResizablePanel>
 
           <ResizableHandle />
 
+          {/* EVENT 2 & 3 GROUP */}
           <ResizablePanel defaultSize={35}>
             <ResizablePanelGroup direction="vertical">
-              {/* Event 2 */}
-              <ResizablePanel defaultSize={40}>
-                <motion.div 
-                  className="relative h-full w-full overflow-hidden rounded-lg group cursor-pointer"
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                >
-                  <motion.div
-                    className="relative h-full w-full"
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
-                  >
-                    <Image
-                      src="/papi-3.jpg"
-                      alt="Event 2"
-                      fill
-                      className="object-cover"
-                    />
-                  </motion.div>
 
-                  <motion.div 
-                    className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col items-start justify-end text-left text-white p-4"
-                    initial={{ opacity: 0.8 }}
-                    whileHover={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
+              {/* EVENT 2 */}
+              <ResizablePanel defaultSize={40}>
+                <Link href="/events" className="block h-full">
+                  <motion.div
+                    className="relative h-full w-full overflow-hidden group cursor-pointer"
+                    whileHover={{ scale: 1.02 }}
                   >
-                    <motion.h3 
-                      className="text-xl font-poppins font-bold"
-                      initial={{ y: 10, opacity: 0.8 }}
-                      whileHover={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.3 }}
+                    <motion.div
+                      className="relative h-full w-full"
+                      whileHover={{ scale: 1.1 }}
                     >
-                      Event 2
-                    </motion.h3>
-                    <motion.p 
-                      className="text-sm font-montserrat font-semibold mt-2"
-                      initial={{ y: 10, opacity: 0.8 }}
-                      whileHover={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.3, delay: 0.05 }}
-                    >
-                      Event highlight kedua perusahaan.
-                    </motion.p>
+                      <Image
+                        src={img(1)}
+                        alt={title(1)}
+                        fill
+                        className="object-cover"
+                      />
+                    </motion.div>
 
                     <motion.div
-                      className="mt-3 h-1 bg-white rounded-full"
-                      initial={{ width: 0 }}
-                      whileHover={{ width: "80px" }}
-                      transition={{ duration: 0.4 }}
+                      className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent 
+                      flex flex-col items-start justify-end text-left text-white p-4"
+                      initial={{ opacity: 0.8 }}
+                      whileHover={{ opacity: 1 }}
+                    >
+                      <motion.h3
+                        className="text-xl font-poppins font-bold"
+                        initial={{ y: 10, opacity: 0.8 }}
+                        whileHover={{ y: 0, opacity: 1 }}
+                      >
+                        {title(1)}
+                      </motion.h3>
+
+                      <motion.p
+                        className="text-sm font-montserrat font-semibold mt-2"
+                        initial={{ y: 10, opacity: 0.8 }}
+                        whileHover={{ y: 0, opacity: 1 }}
+                      >
+                        Sorotan event kedua terbaru.
+                      </motion.p>
+
+                      <motion.div
+                        className="mt-3 h-1 bg-white"
+                        initial={{ width: 0 }}
+                        whileHover={{ width: "80px" }}
+                      />
+                    </motion.div>
+
+                    <motion.div
+                      className="absolute inset-0 bg-white"
+                      initial={{ opacity: 0 }}
+                      whileHover={{ opacity: 0.1 }}
                     />
                   </motion.div>
-
-                  <motion.div
-                    className="absolute inset-0 bg-white rounded-lg"
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 0.1 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </motion.div>
+                </Link>
               </ResizablePanel>
 
               <ResizableHandle />
 
-              {/* Event 3 */}
+              {/* EVENT 3 */}
               <ResizablePanel defaultSize={60}>
-                <motion.div 
-                  className="relative h-full w-full overflow-hidden rounded-lg group cursor-pointer"
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                >
+                <Link href="/events" className="block h-full">
                   <motion.div
-                    className="relative h-full w-full"
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className="relative h-full w-full overflow-hidden group cursor-pointer"
+                    whileHover={{ scale: 1.02 }}
                   >
-                    <Image
-                      src="/papi-3.jpg"
-                      alt="Event 3"
-                      fill
-                      className="object-cover"
-                    />
-                  </motion.div>
-
-                  <motion.div 
-                    className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col items-start justify-end text-left text-white p-4"
-                    initial={{ opacity: 0.8 }}
-                    whileHover={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <motion.h3 
-                      className="text-xl font-poppins font-bold"
-                      initial={{ y: 10, opacity: 0.8 }}
-                      whileHover={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.3 }}
+                    <motion.div
+                      className="relative h-full w-full"
+                      whileHover={{ scale: 1.1 }}
                     >
-                      Event 3
-                    </motion.h3>
-                    <motion.p 
-                      className="text-sm font-montserrat font-semibold mt-2"
-                      initial={{ y: 10, opacity: 0.8 }}
-                      whileHover={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.3, delay: 0.05 }}
-                    >
-                      Event highlight ketiga perusahaan.
-                    </motion.p>
+                      <Image
+                        src={img(2)}
+                        alt={title(2)}
+                        fill
+                        className="object-cover"
+                      />
+                    </motion.div>
 
                     <motion.div
-                      className="mt-3 h-1 bg-white rounded-full"
-                      initial={{ width: 0 }}
-                      whileHover={{ width: "80px" }}
-                      transition={{ duration: 0.4 }}
+                      className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent 
+                      flex flex-col items-start justify-end text-left text-white p-4"
+                      initial={{ opacity: 0.8 }}
+                      whileHover={{ opacity: 1 }}
+                    >
+                      <motion.h3
+                        className="text-xl font-poppins font-bold"
+                        initial={{ y: 10, opacity: 0.8 }}
+                        whileHover={{ y: 0, opacity: 1 }}
+                      >
+                        {title(2)}
+                      </motion.h3>
+
+                      <motion.p
+                        className="text-sm font-montserrat font-semibold mt-2"
+                        initial={{ y: 10, opacity: 0.8 }}
+                        whileHover={{ y: 0, opacity: 1 }}
+                      >
+                        Sorotan event ketiga terbaru.
+                      </motion.p>
+
+                      <motion.div
+                        className="mt-3 h-1 bg-white"
+                        initial={{ width: 0 }}
+                        whileHover={{ width: "80px" }}
+                      />
+                    </motion.div>
+
+                    <motion.div
+                      className="absolute inset-0 bg-white"
+                      initial={{ opacity: 0 }}
+                      whileHover={{ opacity: 0.1 }}
                     />
                   </motion.div>
-
-                  <motion.div
-                    className="absolute inset-0 bg-white rounded-lg"
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 0.1 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </motion.div>
+                </Link>
               </ResizablePanel>
+
             </ResizablePanelGroup>
           </ResizablePanel>
+
         </ResizablePanelGroup>
       </div>
     </section>

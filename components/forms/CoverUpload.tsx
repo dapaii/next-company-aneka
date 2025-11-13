@@ -1,7 +1,7 @@
-// components/forms/CoverUpload.tsx
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -30,16 +30,19 @@ export default function CoverUpload({ defaultCover }: Props) {
           }
         }}
       />
+
       <p className="text-xs text-muted-foreground">
         Mengunggah file baru akan menggantikan cover saat ini.
       </p>
 
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md border bg-muted">
         {preview ? (
-          <img
+          <Image
             src={preview}
             alt="Preview cover"
-            className="object-cover w-full h-full"
+            fill
+            unoptimized
+            className="object-cover"
           />
         ) : (
           <p className="text-sm text-muted-foreground flex items-center justify-center h-full">
