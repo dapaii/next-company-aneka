@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { Calendar, Home, PlusCircle, Shield} from "lucide-react";
+import { Calendar, Home, PlusCircle, Shield, LayoutDashboard } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -22,9 +22,10 @@ import { cn } from "@/lib/utils";
 /* ---------------- Types ---------------- */
 export type NavItem = { title: string; url: string; icon: LucideIcon };
 
-/* ---------------- Nav Items (diexport) ---------------- */
+/* ---------------- Nav Items (UPDATED) ---------------- */
 export const NAV_ITEMS: NavItem[] = [
   { title: "Home", url: "/dashboard", icon: Home },
+  { title: "Overview", url: "/dashboard/overview", icon: LayoutDashboard },
   { title: "Events", url: "/dashboard/events", icon: Calendar },
   { title: "New Event", url: "/dashboard/events/new", icon: PlusCircle },
 ];
@@ -49,6 +50,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-border bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/40">
+      
       {/* BRAND / HEADER */}
       <div className="px-3 py-4 border-b border-border">
         <Link href="/dashboard" className="flex items-center gap-3 group" prefetch={false}>
@@ -64,6 +66,7 @@ export function AppSidebar() {
         </Link>
       </div>
 
+      {/* NAVIGATION LIST */}
       <SidebarContent className="py-3">
         <SidebarGroup>
           <SidebarGroupLabel className="px-3 text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -91,17 +94,26 @@ export function AppSidebar() {
                         <span
                           aria-hidden
                           className={cn(
-                            "absolute left-1.5 h-5 w-1 rounded-full",
+                            "absolute left-1.5 h-5 w-1 rounded-full transition-all",
                             isActive ? "bg-primary" : "bg-transparent"
                           )}
                         />
+
+                        {/* Icon */}
                         <item.icon
                           className={cn(
                             "h-4 w-4 shrink-0 transition-opacity",
                             isActive ? "opacity-100" : "opacity-80 group-hover:opacity-100"
                           )}
                         />
-                        <span className={cn("truncate text-sm", isActive ? "font-medium" : "font-normal")}>
+
+                        {/* Title */}
+                        <span
+                          className={cn(
+                            "truncate text-sm",
+                            isActive ? "font-medium" : "font-normal"
+                          )}
+                        >
                           {item.title}
                         </span>
                       </Link>
@@ -113,7 +125,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Info card kecil (optional) */}
+        {/* QUICK TIP CARD */}
         <div className="px-3 pt-2">
           <div className="rounded-xl border bg-card text-card-foreground">
             <div className="p-3">
@@ -124,13 +136,14 @@ export function AppSidebar() {
         </div>
       </SidebarContent>
 
+      {/* FOOTER */}
       <SidebarFooter className="border-t border-border">
         <form action="/api/auth/logout" method="post" className="w-full px-3 py-2">
           <LogoutButton />
         </form>
         <div className="px-3 pb-3">
           <p className="text-[10px] text-muted-foreground" suppressHydrationWarning>
-            © {year || ""} PT. Aneka Distribusi Indonesia
+            © {year} PT. Aneka Distribusi Indonesia
           </p>
         </div>
       </SidebarFooter>
