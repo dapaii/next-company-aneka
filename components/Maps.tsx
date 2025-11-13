@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { Navigation, MapPin, Clock } from "lucide-react"
 
 export default function Maps() {
+  // Contact info - HANYA 2 cards (kiri-kanan)
   const contactInfo = [
     {
       icon: MapPin,
@@ -14,7 +15,7 @@ export default function Maps() {
     {
       icon: Clock,
       title: "Working Hours",
-      content: "Mon - Fri: 08:00 - 17:00",
+      content: "Mon - Sat : 08:00 - 17:00",
       color: "text-green-400"
     },
   ]
@@ -28,6 +29,7 @@ export default function Maps() {
         backgroundPosition: "center",
       }}
     >
+      {/* Subtle animated background */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-b from-blue-900/20 to-transparent"
         animate={{
@@ -77,6 +79,7 @@ export default function Maps() {
           </motion.p>
         </div>
 
+        {/* ✨ Contact Info Cards - 2 Cards (Left & Right) */}
         <motion.div 
           className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
@@ -111,6 +114,7 @@ export default function Maps() {
           ))}
         </motion.div>
 
+        {/* Animated Google Maps Container */}
         <motion.div 
           className="relative"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -118,6 +122,7 @@ export default function Maps() {
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.5 }}
         >
+          {/* Decorative corners */}
           <motion.div
             className="absolute -top-4 -left-4 w-20 h-20 border-t-4 border-l-4 border-blue-400/50 rounded-tl-3xl pointer-events-none"
             initial={{ opacity: 0, scale: 0 }}
@@ -133,11 +138,13 @@ export default function Maps() {
             transition={{ duration: 0.6, delay: 0.7 }}
           />
 
+          {/* Map with shadow and border */}
           <motion.div 
             className="w-full h-[500px] rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 relative"
             whileHover={{ scale: 1.01 }}
             transition={{ duration: 0.3 }}
           >
+            {/* Pulse effect on hover */}
             <motion.div
               className="absolute inset-0 bg-blue-400/10 pointer-events-none"
               initial={{ opacity: 0 }}
@@ -156,6 +163,7 @@ export default function Maps() {
             />
           </motion.div>
 
+          {/* Floating Action Button */}
           <motion.a
             href="https://maps.google.com/?q=-6.9625348,107.68659989999999"
             target="_blank"
@@ -173,6 +181,7 @@ export default function Maps() {
           </motion.a>
         </motion.div>
 
+        {/* Decorative floating elements */}
         <motion.div
           className="absolute top-20 right-10 w-16 h-16 border-2 border-white/10 rounded-full"
           animate={{

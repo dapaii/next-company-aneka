@@ -93,15 +93,9 @@ export default function ServicesHorizontal() {
       <div className="mx-auto max-w-7xl px-6 md:px-10">
         <div className="mb-8 flex items-end justify-between gap-6 md:mb-10">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-600">
-              Layanan Kami
-            </p>
             <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
               Our Services
             </h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600 md:text-base">
-              Horizontal, ringkas, responsif, dan tampak profesional.
-            </p>
           </div>
 
           <div className="hidden shrink-0 items-center gap-2 md:flex">
@@ -189,9 +183,6 @@ function ServiceCard({ card }: { card: CardData }) {
         </div>
 
         <div className="relative z-10 mt-8 flex items-center justify-between">
-          <div className="text-xs font-medium uppercase tracking-wider text-white/70">
-            Learn more
-          </div>
           <div
             aria-hidden
             className="select-none text-5xl font-black leading-none text-white/10 md:text-6xl"
