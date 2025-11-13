@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 /* ---------------- Types ---------------- */
 export type NavItem = { title: string; url: string; icon: LucideIcon };
 
-/* ---------------- Nav Items (UPDATED) ---------------- */
+
 export const NAV_ITEMS: NavItem[] = [
   { title: "Home", url: "/dashboard", icon: Home },
   { title: "Overview", url: "/dashboard/overview", icon: LayoutDashboard },
